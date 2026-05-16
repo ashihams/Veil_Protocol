@@ -22,18 +22,17 @@ Work is intentionally ordered so mocks and APIs line up with future on-chain beh
 
 ### Layer view
 
-```
-                    ┌──────────────────────────────────────┐
-                    │  Phase 3 — Discovery + attestation   │
-                    │  ERC-8004-ish registry, reputation    │
-                    └─────────────────┬────────────────────┘
-                                      │
-┌──────────────────┐    ┌─────────────▼──────────────┐
-│ Phase 2 — x402   │    │  Phase 1 — Midnight core   │
-│ GET /service 402 │◄──►│  DKSAP + shielded mint     │
-│ POST /pay + tok  │    │  private announcements      │
-└──────────────────┘    │  witness scan + withdraw    │
-                        └────────────────────────────┘
+```mermaid
+graph TD
+    P3["<b>Phase 3 — Discovery + attestation</b><br/>ERC-8004 registry · reputation · validation<br/><i>@eddalabs/agent-contract</i>"]
+
+    P2["<b>Phase 2 — x402</b><br/>HTTP 402 challenge · HMAC payment proof<br/>agent dispatch · settlement response<br/><i>@eddalabs/agent-server</i>"]
+
+    P1["<b>Phase 1 — Midnight core</b><br/>DKSAP + shielded mint<br/>private announcements<br/>witness scan + withdraw<br/><i>@eddalabs/stealth-contract</i>"]
+
+    P3 --> P2
+    P3 --> P1
+    P2 <--> P1
 ```
 
 ### x402 Agent Marketplace flow (Phase 2)
