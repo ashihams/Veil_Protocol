@@ -1,0 +1,60 @@
+pragma language_version >= 0.20;
+
+import CompactStandardLibrary;
+
+// requestHash = SHA-256(validator ++ agentId ++ requestURI ++ timestamp), computed off-chain.
+// Used as the primary key across all validation maps.
+
+// requestHash → agentId encoded as Bytes<32> (big-endian uint64 left-padded to 32 bytes).
+export ledger validationAgentId: Map<Bytes<32>, Bytes<32>>;
+
+// requestHash → validator public key (Bytes<32>).
+export ledger validationValidator: Map<Bytes<32>, Bytes<32>>;
+
+// requestHash → response value encoded as Bytes<32> (single byte in position 31, 0x00-0x64).
+// Absent = pending (TypeScript layer treats missing key as response = -1).
+export ledger validationResponse: Map<Bytes<32>, Bytes<32>>;
+
+// requestHash → SHA-256(responseURI content).
+export ledger validationRespHash: Map<Bytes<32>, Bytes<32>>;
+
+// requestHash → tag (Bytes<32>).
+export ledger validationTag: Map<Bytes<32>, Bytes<32>>;
+
+// requestHash → timestamp of last update encoded as Bytes<32>.
+export ledger validationLastUpdate: Map<Bytes<32>, Bytes<32>>;
+
+// Event substitutes.
+export ledger requestCount: Counter;
+export ledger responseCountVal: Counter;
+
+// A client requests validation of an agent from a specific validator.
+export circuit validationRequest(
+  requestHash: Bytes<32>,
+  validatorKey: Bytes<32>,
+  agentIdBytes: Bytes<32>,
+  requestUriHash: Bytes<32>,
+  timestamp: Bytes<32>
+): [] {
+  validationAgentId.insert(requestHash, agentIdBytes);
+  validationValidator.insert(requestHash, validatorKey);
+  validationLastUpdate.insert(requestHash, timestamp);
+  requestCount.increment(1);
+}
+
+// A validator submits a response (0-100) for a pending request.
+// responseEncoded: single byte (0x00-0x64) packed into the last byte of a 32-byte buffer.
+export circuit validationResponse(
+  requestHash: Bytes<32>,
+  responseEncoded: Bytes<32>,
+  responseUriHash: Bytes<32>,
+  respHash: Bytes<32>,
+  tag: Bytes<32>,
+  timestamp: Bytes<32>
+): [] {
+  validationResponse.insert(requestHash, responseEncoded);
+  validationRespHash.insert(requestHash, respHash);
+  validationTag.insert(requestHash, tag);
+  validationLastUpdate.insert(requestHash, timestamp);
+  responseCountVal.increment(1);
+}

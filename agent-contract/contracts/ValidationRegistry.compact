@@ -1,0 +1,56 @@
+// ValidationRegistry.compact — full production design sketch.
+// This file documents the intended production extensions beyond src/validation.compact.
+// It is NOT compiled; it serves as an architecture reference.
+//
+// ─── Validator allowlist ─────────────────────────────────────────────────────
+//
+// In MVP any caller can submit a validationResponse. Production restricts this:
+//
+//   export ledger approvedValidators: Map<Bytes<32>, Bytes<32>>;
+//   // validatorKey → agentId of the validator (proves the validator is itself registered)
+//
+//   export circuit registerValidator(validatorKey: Bytes<32>, validatorAgentId: Bytes<32>): [] {
+//     witness adminProof: Bytes<32>;   // only contract admin can approve validators
+//     approvedValidators.insert(validatorKey, validatorAgentId);
+//   }
+//
+//   In validationResponse circuit:
+//     assert(approvedValidators.member(validatorKey));
+//
+// ─── Duplicate requestHash prevention ────────────────────────────────────────
+//
+//   In validationRequest circuit (production):
+//     assert(!validationAgentId.member(requestHash));
+//     // Prevents replay: same (validator, agentId, requestURI) cannot be resubmitted.
+//
+// ─── Running-sum getSummary optimisation ────────────────────────────────────
+//
+// ERC-8004 getSummary(agentId, validators[], tag) requires iterating all requests.
+// Same two options as ReputationRegistry:
+//
+// Option A — Running aggregate (recommended):
+//
+//   export ledger validationSumByAgent: Map<Bytes<32>, Bytes<32>>;
+//   export ledger validationCountByAgent: Map<Bytes<32>, Counter>;
+//   // summaryKey = SHA-256(agentId ++ tag)
+//
+//   In validationResponse circuit:
+//     validationSumByAgent.insert(summaryKey, addByte(currentSum, responseEncoded));
+//     validationCountByAgent[summaryKey].increment(1);
+//
+// Option B — Off-chain indexer (MVP path, already implemented in TS ValidationRegistry).
+//
+// ─── Response range enforcement ──────────────────────────────────────────────
+//
+// ERC-8004 specifies response ∈ [0, 100]. Compact can enforce this:
+//
+//   In validationResponse circuit:
+//     assert(responseEncoded[31] <= 100);
+//     // Compact byte comparison syntax TBD per compiler version.
+//
+// ─── Cross-chain validation (ERC-8004 §cross-chain) ─────────────────────────
+//
+// A validator on Midnight can attest to an agent operating on another chain.
+// The requestUriHash would point to a JSON file containing the cross-chain proof
+// (e.g. a signed EVM transaction hash + block proof). Verification remains off-chain;
+// only the attestation hash is committed to the Midnight ledger.

@@ -1,0 +1,61 @@
+pragma language_version >= 0.20;
+
+import CompactStandardLibrary;
+
+// Composite key scheme for all maps: SHA-256(agentId ++ clientKey ++ feedbackIndex)
+// computed off-chain by the TypeScript SDK before calling any circuit.
+
+// compositeKey → encoded (value, valueDecimals) as 32 bytes.
+// Encoding: bytes 0-15 = int128 value (big-endian), byte 31 = decimals.
+export ledger feedbackValue: Map<Bytes<32>, Bytes<32>>;
+
+// compositeKey → tag1 (Bytes<32> = SHA-256 of the tag string or the raw tag padded to 32).
+export ledger feedbackTag1: Map<Bytes<32>, Bytes<32>>;
+
+// compositeKey → tag2.
+export ledger feedbackTag2: Map<Bytes<32>, Bytes<32>>;
+
+// compositeKey → revoked flag. Non-zero = revoked; zero = active.
+export ledger feedbackRevoked: Map<Bytes<32>, Bytes<32>>;
+
+// compositeKey → SHA-256(feedbackURI content). Content stored off-chain.
+export ledger feedbackHash: Map<Bytes<32>, Bytes<32>>;
+
+// compositeKey → SHA-256(responseURI content). Written by appendResponse.
+export ledger responseHash: Map<Bytes<32>, Bytes<32>>;
+
+// Event substitutes.
+export ledger newFeedbackCount: Counter;
+export ledger revocationCount: Counter;
+export ledger responseCount: Counter;
+
+// Submit feedback for an agent.
+// agentIdKey  = SHA-256(agentId) — used for per-agent indexing off-chain.
+// compositeKey = SHA-256(agentId ++ clientKey ++ feedbackIndex) — the primary map key.
+// encodedValue = (int128 value, uint8 decimals) packed into 32 bytes.
+export circuit giveFeedback(
+  agentIdKey: Bytes<32>,
+  compositeKey: Bytes<32>,
+  encodedValue: Bytes<32>,
+  tag1: Bytes<32>,
+  tag2: Bytes<32>,
+  fbHash: Bytes<32>
+): [] {
+  feedbackValue.insert(compositeKey, encodedValue);
+  feedbackTag1.insert(compositeKey, tag1);
+  feedbackTag2.insert(compositeKey, tag2);
+  feedbackHash.insert(compositeKey, fbHash);
+  newFeedbackCount.increment(1);
+}
+
+// Mark a feedback entry as revoked. revokedFlag must be non-zero.
+export circuit revokeFeedback(compositeKey: Bytes<32>, revokedFlag: Bytes<32>): [] {
+  feedbackRevoked.insert(compositeKey, revokedFlag);
+  revocationCount.increment(1);
+}
+
+// Agent appends a response to a client's feedback entry.
+export circuit appendResponse(compositeKey: Bytes<32>, respHash: Bytes<32>): [] {
+  responseHash.insert(compositeKey, respHash);
+  responseCount.increment(1);
+}
