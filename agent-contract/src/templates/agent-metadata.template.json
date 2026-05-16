@@ -1,0 +1,40 @@
+{
+  "$schema": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+
+  "name": "Example Agent",
+  "description": "A short natural-language description of what this agent does, how it works, and any pricing or interaction notes.",
+  "image": "https://example.com/agent-avatar.png",
+  "active": true,
+  "x402Support": true,
+
+  "services": [
+    {
+      "name": "web",
+      "endpoint": "https://example.com/api",
+      "version": "1.0.0",
+      "skills": [],
+      "domains": []
+    },
+    {
+      "name": "A2A",
+      "endpoint": "https://example.com/a2a",
+      "version": "1.0.0"
+    },
+    {
+      "name": "MCP",
+      "endpoint": "https://example.com/mcp",
+      "version": "1.0.0"
+    }
+  ],
+
+  "registrations": [
+    {
+      "chain": "midnight:preview",
+      "registry": "0x0000000000000000000000000000000000000000",
+      "agentId": 1
+    }
+  ],
+
+  "supportedTrust": ["reputation", "crypto-economic"]
+}
