@@ -8,15 +8,17 @@
     "counter-contract",
     "frontend-vite-react",
     "stealth-contract",
-    "agent-contract"
+    "agent-contract",
+    "agent-server"
   ],
   "scripts": {
     "compact": "turbo run compact",
     "build": "turbo run build",
-    "build-production": "git lfs pull && cd counter-contract && npm run build && cd ../frontend-vite-react && npm run build",    
+    "build-production": "git lfs pull && cd counter-contract && npm run build && cd ../frontend-vite-react && npm run build",
     "setup-standalone": "cd counter-cli && npm run setup-undeployed",
-    "dev:frontend": "cd frontend-vite-react && npm run dev",    
-    "lint": "turbo run lint"     
+    "dev:frontend": "cd frontend-vite-react && npm run dev",
+    "dev:agent-server": "cd agent-server && npm run dev",
+    "lint": "turbo run lint"
   },
   "engines": {
     "node": ">=18"

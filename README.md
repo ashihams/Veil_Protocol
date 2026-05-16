@@ -15,7 +15,7 @@ Work is intentionally ordered so mocks and APIs line up with future on-chain beh
 | Phase | Scope | Status |
 | ----- | ----- | ------ |
 | **1 — Core** | Keys, DKSAP derivation, shielded payment intent, private announcements, scanning, withdrawal | Owned by `@eddalabs/stealth-contract` (TypeScript reference + Compact) in the same way `@eddalabs/counter-contract` owns the counter circuit and managed artifacts |
-| **2 — Commerce** | [x402](https://www.x402.org)-style flows: challenge (402), payment proof, resource unlock | Sits above shielded pay; ties HTTP resources to Midnight settlement |
+| **2 — Commerce** | [x402](https://www.x402.org)-style flows: challenge (402), payment proof, resource unlock | **Implemented** — `@eddalabs/agent-server` exposes `POST /task`, issues HTTP 402 challenges, verifies HMAC-SHA256 proofs, dispatches to an in-memory agent pool |
 | **3 — Ecosystem** | [ERC-8004](https://eips.ethereum.org/EIPS/eip-8004) Identity, Reputation, and Validation registries for trustless agent discovery | **Ported** — `@eddalabs/agent-contract` implements all three registries as Compact circuits + TypeScript SDK |
 
 **Build order:** ship Phase 1 first (crypto, Compact evolution, witnesses, DUST for fees), then wire x402, then discovery.
@@ -34,6 +34,40 @@ Work is intentionally ordered so mocks and APIs line up with future on-chain beh
 │ POST /pay + tok  │    │  private announcements      │
 └──────────────────┘    │  witness scan + withdraw    │
                         └────────────────────────────┘
+```
+
+### x402 Agent Marketplace flow (Phase 2)
+
+An external client pays per task via the HTTP 402 protocol. Payment proof is an HMAC-SHA256 over a canonical payload (Midnight DUST units); a pool of idle agents dispatches the work and returns the result.
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant S as agent-server<br/>(POST /task)
+    participant P as PaymentService<br/>(HMAC verifier)
+    participant A as AgentPool<br/>(add-agent-*)
+
+    C->>S: POST /task {op:"add", a:2, b:3}
+    S-->>C: 402 Payment Required<br/>X-Payment-Required: <base64 PaymentRequired>
+
+    Note over C: decode PaymentRequired,<br/>build PaymentAuthorization,<br/>sign with HMAC-SHA256 → signature
+
+    C->>S: POST /task {op:"add", a:2, b:3}<br/>X-Payment-Signature: <base64 PaymentPayload>
+    S->>P: verifyAndExtract(header, sharedSecret)
+    P-->>S: {valid: true, auth}
+    S->>A: dispatch("add", 2, 3)
+    A-->>S: {result: 5, agentId: "add-agent-1"}
+    S-->>C: 200 {result: 5, agentId: "add-agent-1"}<br/>X-Payment-Response: <base64 SettlementResponse>
+```
+
+**Run the demo:**
+
+```bash
+# Terminal 1 — start the server
+npm run dev:agent-server
+
+# Terminal 2 — run the client (performs the full 402 → pay → result cycle)
+node agent-server/scripts/demo-client.mjs
 ```
 
 ### Protocol identity (DKSAP on Midnight)
@@ -62,6 +96,7 @@ Setup → Discover → Derive stealth → Shielded pay → Scan → Withdraw →
 | `counter-cli` | Deploy / join / CLI flows for local and preview networks |
 | `stealth-contract` | DKSAP crypto (`@noble/secp256k1`, `ethers`), services, tests, Compact sources under `contracts/` / `src/*.compact` → `managed/` as circuits mature |
 | `agent-contract` | ERC-8004 port — Identity, Reputation, and Validation registries as Compact circuits + in-memory TypeScript SDK (`@eddalabs/agent-contract`) |
+| `agent-server` | x402 agent marketplace — HTTP 402 payment gate, HMAC-SHA256 proof verification, in-memory agent pool dispatching `add(a,b)` tasks |
 | `frontend-vite-react` | React app: `/counter` uses counter SDK; `/stealth` uses stealth SDK + `@eddalabs/stealth-contract` for client crypto; copies ZK artifacts via `scripts/copy-contract-keys.mjs` |
 
 **Principle:** no third-party stealth npm crate — curve work stays in-repo for auditability and Midnight alignment.
@@ -71,7 +106,8 @@ Setup → Discover → Derive stealth → Shielded pay → Scan → Withdraw →
 - **Counter:** Template parity with Midnight quickstart (deploy, prove, private state).
 - **Stealth:** Client DKSAP, mock announcement queue, receive scan UI, stealth contract artifact layout mirroring counter; Compact compilation path exists and will grow with real shielded announcement logic.
 - **Agent (ERC-8004):** All three registries ported — Identity (register, URI, metadata, wallet), Reputation (feedback, revocation, responses, summaries), Validation (requests, scored responses, validator summaries). Compact circuits compilable today; production ownership proofs and on-chain aggregation documented in `contracts/` design sketches.
-- **x402 / discovery integration:** Planned (Phase 2); not yet primary UX in this repo.
+- **x402 Agent Marketplace:** `agent-server` implements the full HTTP 402 flow — challenge, HMAC-SHA256 payment proof verification, in-memory agent pool, and settlement response. Demo client at `agent-server/scripts/demo-client.mjs`.
+- **x402 / discovery integration:** Planned deeper integration (Midnight on-chain settlement, full discovery via Phase 3 registries).
 
 Internal design notes for contributors live under `.cursor/skills/midnight-architect/` (checklists and reference markdown).
 
@@ -120,6 +156,15 @@ Build scripts use Node’s `fs` helpers so they run cleanly on Windows, macOS, a
 npm run dev:frontend
 ```
 
+### x402 agent server
+
+```bash
+npm run dev:agent-server
+# → http://localhost:3402
+# Demo client (in another terminal):
+node agent-server/scripts/demo-client.mjs
+```
+
 ### Local / undeployed network
 
 ```bash
@@ -140,6 +185,7 @@ npm run dev:frontend
 ├── counter-contract/     # Counter Compact module + managed artifacts
 ├── stealth-contract/     # DKSAP + stealth Compact (template parity with counter)
 ├── agent-contract/       # ERC-8004 port: Identity, Reputation, Validation registries
+├── agent-server/         # x402 agent marketplace: HTTP 402 gate + agent pool
 └── frontend-vite-react/  # Vite + React + TanStack Router; counter + stealth SDKs
 ```
 
