@@ -1,5 +1,4 @@
 {
-  "$schema": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
   "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
 
   "name": "Example Agent",

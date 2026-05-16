@@ -26,7 +26,6 @@ export interface AgentRegistrationRef {
 }
 
 export interface AgentMetadata {
-  $schema: "https://eips.ethereum.org/EIPS/eip-8004#registration-v1";
   type: "https://eips.ethereum.org/EIPS/eip-8004#registration-v1";
 
   /** Human-readable agent name */
@@ -73,10 +72,9 @@ export function hashAgentMetadata(meta: AgentMetadata): Bytes32 {
  */
 export function createAgentMetadata(
   opts: Pick<AgentMetadata, "name" | "description" | "services"> &
-    Partial<Omit<AgentMetadata, "name" | "description" | "services" | "$schema" | "type">>,
+    Partial<Omit<AgentMetadata, "name" | "description" | "services" | "type">>,
 ): AgentMetadata {
   return {
-    $schema: "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
     type: "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
     active: true,
     x402Support: false,
