@@ -9,7 +9,8 @@
     "frontend-vite-react",
     "stealth-contract",
     "agent-contract",
-    "agent-server"
+    "agent-server",
+    "agent-cli"
   ],
   "scripts": {
     "compact": "turbo run compact",
@@ -18,6 +19,7 @@
     "setup-standalone": "cd counter-cli && npm run setup-undeployed",
     "dev:frontend": "cd frontend-vite-react && npm run dev",
     "dev:agent-server": "cd agent-server && npm run dev",
+    "deploy:agent-preview": "cd agent-cli && npm run deploy-preview",
     "lint": "turbo run lint"
   },
   "engines": {
