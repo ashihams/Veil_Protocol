@@ -93,12 +93,26 @@ export function verifyAndExtract(
     return { valid: false, reason: "missing_authorization" };
   }
 
+  if (
+    typeof auth.amount !== "string" ||
+    typeof auth.requestId !== "string" ||
+    typeof auth.nonce !== "string" ||
+    typeof auth.validBefore !== "number"
+  ) {
+    return { valid: false, reason: "malformed_authorization" };
+  }
+
   const now = Math.floor(Date.now() / 1000);
   if (auth.validBefore < now) {
     return { valid: false, reason: "authorization_expired" };
   }
 
-  const proofPayload = toProofPayload(auth, payTo);
+  let proofPayload: PaymentProofPayload;
+  try {
+    proofPayload = toProofPayload(auth, payTo);
+  } catch {
+    return { valid: false, reason: "malformed_authorization" };
+  }
   const sig = payload.payload.signature as `0x${string}`;
   const ok = verifyPaymentProof(proofPayload, sharedSecret, sig);
 
