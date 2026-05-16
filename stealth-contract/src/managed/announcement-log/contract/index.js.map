@@ -1,0 +1,8 @@
+{
+  "version": 3,
+  "file": "index.js",
+  "sourceRoot": "../../../../",
+  "sources": ["src/contracts/announcement-log.compact"],
+  "names": [],
+  "mappings": ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;EA8BA;;;;;;;;;;MAuBA,AAAA,gBAkBC;;;;;cAjBC,aAAsB;cACtB,cAAuB;cACvB,WAAoB;cACpB,SAAiB;cACjB,WAAmB;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;yCAJnB,aAAsB,+BACtB,cAAuB,+BACvB,WAAoB,+BACpB,SAAiB,+BACjB,WAAmB;;;;;;;;;kDAJnB,aAAsB;kDACtB,cAAuB;kDACvB,WAAoB;kDACpB,SAAiB;kDACjB,WAAmB;;;OAapB;;;GAQA;EAjDD;;;;;;;;;;;;;;;;;;;;;;;;;;;;IAcA;;;;;;;;;yEAAkC;IAGlC;;;;;;;;;;yEAAqD;IAGrD;;;;;;;;;yEAA+C;;;;;;;GA6B9C;EA1BD,AAAA,mBAkBC;;sBAjBC,aAAsB;sBACtB,cAAuB;sBACvB,WAAoB;sBACpB,SAAiB;sBACjB,WAAmB;;UAEb,KAA8B,2BAAxB;;;;;;;;;;;+GAAiB;UACvB,KAML,kBALuB,aAAW;kCACV,cAAY;+BACf,WAAS;6BACX,SAAO;+BACL,WAAS;IAE/B;;;;;;;;;;2HAA8B,KAAG;;;2HAAY,KAAG;;;wEAAnC;UACb,KAAiB;IAAjB;;;;;;;;;;6FAAA,KAAiB;;;;wEAAA;UACjB,KAAuB;IAAvB;;;;;;;;;;6FAAA,KAAuB;;;;wEAAA;;GACxB;;;;;;;;;;;;;;;;IArBD;qCAAA;;;;;;;;;;;0GAA+C;KAAA;;;;;;;;;;"
+}

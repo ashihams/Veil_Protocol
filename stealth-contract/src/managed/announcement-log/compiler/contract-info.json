@@ -1,0 +1,54 @@
+{
+  "circuits": [
+    {
+      "name": "add_announcement",
+      "pure": false,
+      "arguments": [
+        {
+          "name": "stealthAddr",
+          "type": {
+            "type-name": "Bytes",
+            "length": 20
+          }
+        },
+        {
+          "name": "ephemeralPub",
+          "type": {
+            "type-name": "Bytes",
+            "length": 33
+          }
+        },
+        {
+          "name": "encRandom",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "viewTag",
+          "type": {
+            "type-name": "Bytes",
+            "length": 1
+          }
+        },
+        {
+          "name": "timestamp",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 18446744073709551615
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    }
+  ],
+  "witnesses": [
+  ],
+  "contracts": [
+  ]
+}

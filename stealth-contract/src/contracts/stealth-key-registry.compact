@@ -1,0 +1,63 @@
+// =============================================================================
+// stealth-key-registry.compact — Public Stealth Key Directory
+// =============================================================================
+//
+// What this contract does:
+//   Publishes each agent's dual DKSAP public keys (P_spend, P_view) so senders
+//   can derive one-time stealth addresses off-chain. The on-chain key is
+//   SHA-256(agentId) (or another agreed UTF-8 / binary encoding), not raw agentId,
+//   so map keys stay fixed-width Bytes<32>.
+//
+// Umbra / Ethereum analogue:
+//   Similar in spirit to publishing a stealth meta-address or registry entry
+//   that ties an identity to (P_spend, P_view). Senders fetch keys from the
+//   registry before running DKSAP locally.
+//
+// What Midnight adds:
+//   • Keys live in `export ledger` — anyone can verify registration in the ZK
+//     context without trusting a Web2 API.
+//   • Registration can later be gated with witnesses (e.g. prove ownership of
+//     agentId via a signature) without revealing extra secrets on the public log.
+//
+// Compilation note:
+//   Struct-as-map-value and exact `lookup` typing may need adjustment for your
+//   Compact 0.28.x toolchain. If the compiler rejects ADT values inside `Map`,
+//   split into two maps: `Map<Bytes<32>, Bytes<33>>` for spendPub and viewPub
+//   (same pattern as agent-contract's parallel Maps).
+// =============================================================================
+
+pragma language_version >= 0.20;
+
+import CompactStandardLibrary;
+
+/// Compressed secp256k1 pubkey for P_spend and P_view (33 bytes: 0x02/0x03 + 32-byte X).
+struct StealthKeys {
+  spendPub: Bytes<33>;
+  viewPub: Bytes<33>;
+}
+
+/// agentIdHash = SHA-256(agentId_bytes) — 32-byte key primitive (Compact map rule).
+export ledger stealthKeys: Map<Bytes<32>, StealthKeys>;
+
+/// Monotonic registration counter (substitute for events; indexers can poll).
+export ledger registrationCount: Counter;
+
+/// Insert or replace stealth public keys for a hashed agent identity.
+export circuit register_keys(
+  agentIdHash: Bytes<32>,
+  spendPub: Bytes<33>,
+  viewPub: Bytes<33>
+): [] {
+  const bundle = StealthKeys {
+    spendPub: disclose(spendPub),
+    viewPub: disclose(viewPub),
+  };
+  stealthKeys.insert(disclose(agentIdHash), disclose(bundle));
+  registrationCount.increment(1);
+}
+
+/// Read published keys for an agent hash. Absent keys: runtime/verifier behavior
+/// is toolchain-specific (default struct vs proof failure); production adds assert.
+export circuit lookup_keys(agentIdHash: Bytes<32>): StealthKeys {
+  return stealthKeys.lookup(disclose(agentIdHash));
+}

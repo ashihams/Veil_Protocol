@@ -1,0 +1,73 @@
+{
+  "circuits": [
+    {
+      "name": "register_keys",
+      "pure": false,
+      "arguments": [
+        {
+          "name": "agentIdHash",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "spendPub",
+          "type": {
+            "type-name": "Bytes",
+            "length": 33
+          }
+        },
+        {
+          "name": "viewPub",
+          "type": {
+            "type-name": "Bytes",
+            "length": 33
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+        ]
+      }
+    },
+    {
+      "name": "lookup_keys",
+      "pure": false,
+      "arguments": [
+        {
+          "name": "agentIdHash",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Struct",
+        "name": "StealthKeys",
+        "elements": [
+          {
+            "name": "spendPub",
+            "type": {
+              "type-name": "Bytes",
+              "length": 33
+            }
+          },
+          {
+            "name": "viewPub",
+            "type": {
+              "type-name": "Bytes",
+              "length": 33
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "witnesses": [
+  ],
+  "contracts": [
+  ]
+}

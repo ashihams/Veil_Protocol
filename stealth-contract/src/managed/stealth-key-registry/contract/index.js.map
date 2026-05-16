@@ -1,0 +1,8 @@
+{
+  "version": 3,
+  "file": "index.js",
+  "sourceRoot": "../../../../",
+  "sources": ["src/contracts/stealth-key-registry.compact"],
+  "names": [],
+  "mappings": ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;EA4BA;;;;;;;;;;MAiBA,AAAA,aAWC;;;;;cAVC,aAAsB;cACtB,UAAmB;cACnB,SAAkB;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;yCAFlB,aAAsB,+BACtB,UAAmB,+BACnB,SAAkB;;;;;;;;;+CAFlB,aAAsB;+CACtB,UAAmB;+CACnB,SAAkB;;;OAQnB;MAID,AAAA,WAEC;;;;;cAF0B,aAAsB;;;;;;;;;;;;;;;;;;yCAAtB,aAAsB;;;;;;;;;6CAAtB,aAAsB;;;OAEhD;;;;;;GACA;EAnCD;;;;;;;;;;;;;;;;;;;;;;;;;;;;IAWA;;;;;;;;;;yEAAuD;IAGvD;;;;;;;;;yEAAyC;;;;;;;GAqBxC;EAlBD,AAAA,gBAWC;;mBAVC,aAAsB;mBACtB,UAAmB;mBACnB,SAAkB;;UAEZ,QAGL,eAFoB,UAAQ,WACT,SAAO;IAE3B;;;;;;;;;;2HAA4B,aAAW;;;2HAAY,QAAM;;;wEAA9C;UACX,KAAiB;IAAjB;;;;;;;;;;6FAAA,KAAiB;;;;wEAAA;;GAClB;EAID,AAAA,cAEC,4BAF0B,aAAsB;mCACxC;;;;;;;;;;;;;;8HAA4B,aAAW;;;wGAA5B;GACnB;;;;;;;;;;;;;;;;IAvBD;;;;;uCAAA;;;;;;;;;;;;;;;;4GAAuD;;;;;;uCAAvD;;;;;;;;;;;;4GAAuD;;;;;;;;;;;;;;uCAAvD;;;;;;;;;;;;;;;4GAAuD;;;;;;;;;;;;;;uCAAvD;;;;;;;;;;;;;;;;;4GAAuD;;;;;;;;;KAAA;IAGvD;qCAAA;;;;;;;;;;;0GAAyC;KAAA;;;;;;;;;;"
+}

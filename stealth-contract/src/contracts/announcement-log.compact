@@ -1,0 +1,79 @@
+// =============================================================================
+// announcement-log.compact — Shielded Stealth Announcement Log (private region)
+// =============================================================================
+//
+// What this contract does:
+//   Appends DKSAP "announcement" rows — ephemeral pubkey R, encrypted random,
+//   view tag, stealth address digest — into contract **private** state so they
+//   are not world-readable like Ethereum calldata. The recipient scans with
+//   `p_view` off-chain using `get_announcements` (witness) to retrieve rows.
+//
+// Umbra / Ethereum analogue:
+//   Umbra-style announcements published on L1 are visible to everyone; only
+//   unlinkability + encryption hides the link. Here, the **same cryptographic
+//   fields** exist, but the log is intended to live in Midnight **shielded /
+//   sealed** state so global observers do not read R, ciphertext, or view tags.
+//
+// What Midnight adds:
+//   • `sealed ledger` — confidentiality vs public map/array.
+//   • `witness get_announcements` — TypeScript runner supplies decrypted / local
+//     views for scanning (ZK literature "witness": supplied evidence, not
+//     recomputed in-circuit). Real deployment may use Merkle paths + selective
+//     disclosure instead of bulk return.
+//   • Index key `Uint<64>` satisfies "map keys are primitive" (not ADTs).
+//
+// Compilation note:
+//   `Vector<AnnouncementRow, 256>` as witness return may need grammar tweaks in your
+//   0.28 toolchain; fallback is `witness get_announcements(): Bytes<N>` with packed
+//   encoding documented in the TS runner.
+// =============================================================================
+
+pragma language_version >= 0.20;
+
+import CompactStandardLibrary;
+
+/// One row of public (to recipient) scan data; amounts live in ciphertext or UTXO.
+struct AnnouncementRow {
+  stealthAddr: Bytes<20>;
+  ephemeralPub: Bytes<33>;
+  encRandom: Bytes<32>;
+  viewTag: Bytes<1>;
+  timestamp: Uint<64>;
+}
+
+/// Append order — private; scanners learn indices only via witness export.
+ledger announcementCount: Counter;
+
+/// Monotonic index → row. Key is primitive Uint<64>.
+ledger announcements: Map<Uint<64>, AnnouncementRow>;
+
+/// Activity counter (optional indexers — same idea as agent-contract Counters).
+export ledger announcementAppendCount: Counter;
+
+/// Insert one announcement row into shielded state.
+export circuit add_announcement(
+  stealthAddr: Bytes<20>,
+  ephemeralPub: Bytes<33>,
+  encRandom: Bytes<32>,
+  viewTag: Bytes<1>,
+  timestamp: Uint<64>
+): [] {
+  const idx = announcementCount.read();
+  const row = AnnouncementRow {
+    stealthAddr: disclose(stealthAddr),
+    ephemeralPub: disclose(ephemeralPub),
+    encRandom: disclose(encRandom),
+    viewTag: disclose(viewTag),
+    timestamp: disclose(timestamp),
+  };
+  announcements.insert(disclose(idx), disclose(row));
+  announcementCount.increment(1);
+  announcementAppendCount.increment(1);
+}
+
+/// Off-chain scanner: TS runner materializes up to 256 recent rows (bound).
+/// Unused slots are zeroed by the runner; the wallet proves consistency via ZK
+/// when asserting membership of a row.
+// Off-chain scanner: TS runner materializes recent rows and returns a hash
+// commitment. Actual row data is deserialized off-chain by the scanning wallet.
+witness get_announcements(): Bytes<32>;
