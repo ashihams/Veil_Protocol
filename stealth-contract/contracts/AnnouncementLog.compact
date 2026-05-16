@@ -1,0 +1,11 @@
+// AnnouncementLog.compact — private announcement store + witness export (API sketch).
+//
+// Private ledger structure (per contract or per-receiver partition — design choice):
+//   announcements[] := { stealthAddr, R, viewTag, ciphertext }
+//
+// Witness scan_announcements(viewPriv_disclosed_to_prover):
+//   - Iterate private rows; return candidates to off-chain scanner.
+//   - Matches TypeScript `scanAnnouncements` in `@eddalabs/stealth-contract`.
+//
+// Selective disclosure:
+//   - disclose(viewTag) or disclose(hash(row)) for attestation / x402 unlock without revealing full graph.

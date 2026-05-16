@@ -1,0 +1,15 @@
+// StealthSend.compact — shielded stealth payment + announcement append (API sketch).
+//
+// Public inputs (example): commitment to payment, nullifiers, anchor — follow Zswap patterns.
+// Private inputs:
+//   - stealth_addr (derived off-chain per DKSAP)
+//   - amount, token identifier
+//   - R (ephemeral pubkey), ciphertext / viewTag
+//
+// Actions:
+//   1. mintShieldedToken(/* owner = stealth spending condition */, amount, token)
+//      — amounts + asset types hidden in Zswap UTXOs.
+//   2. Append to AnnouncementLog private state:
+//        { stealthAddress, R, viewTag, ciphertext }
+//
+// No public `log` for (R, stealthAddress): Midnight private ledger carries it; scanning is witness-side.

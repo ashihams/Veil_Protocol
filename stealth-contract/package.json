@@ -1,0 +1,34 @@
+{
+  "name": "@eddalabs/stealth-contract",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "description": "DKSAP stealth crypto + Midnight Compact module (template parity with counter-contract)",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "compact": "compact compile +0.28.0 src/stealth.compact src/managed/stealth",
+    "build": "node scripts/build.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@midnight-ntwrk/compact-runtime": "0.14.0",
+    "@noble/hashes": "^1.7.1",
+    "@noble/secp256k1": "^2.1.0",
+    "ethers": "^6.13.5"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.0"
+  }
+}

@@ -1,0 +1,10 @@
+pragma language_version >= 0.20;
+
+import CompactStandardLibrary;
+
+// Template parity with counter: minimal on-chain demo ledger (stealth stack uses client DKSAP + this for deploy/prove flow).
+export ledger round: Counter;
+
+export circuit increment(): [] {
+  round.increment(1);
+}

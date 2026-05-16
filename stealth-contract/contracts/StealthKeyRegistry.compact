@@ -1,0 +1,11 @@
+// StealthKeyRegistry.compact — judge-facing artifact (API sketch; adapt to current Compact docs).
+//
+// Intent:
+// - Public ledger: binding from `agentId` to stealth public keys (P_spend, P_view).
+// - Private: none required for registration beyond what's disclosed in proof.
+//
+// Suggested exports (names illustrative):
+//   circuit registerStealthKeys(agentId: Bytes32, P_spend: CurvePoint, P_view: CurvePoint)
+//   export ledger stealthKeys: Map<AgentId, StealthKeyBundle>
+//
+// ZK: prove knowledge of signing authorization for agentId (MVP may stub).
