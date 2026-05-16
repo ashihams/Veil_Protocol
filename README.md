@@ -12,11 +12,11 @@ Work is intentionally ordered so mocks and APIs line up with future on-chain beh
 
 ### Roadmap phases
 
-| Phase | Scope | Role in the stack |
-| ----- | ----- | ------------------ |
+| Phase | Scope | Status |
+| ----- | ----- | ------ |
 | **1 — Core** | Keys, DKSAP derivation, shielded payment intent, private announcements, scanning, withdrawal | Owned by `@eddalabs/stealth-contract` (TypeScript reference + Compact) in the same way `@eddalabs/counter-contract` owns the counter circuit and managed artifacts |
 | **2 — Commerce** | [x402](https://www.x402.org)-style flows: challenge (402), payment proof, resource unlock | Sits above shielded pay; ties HTTP resources to Midnight settlement |
-| **3 — Ecosystem** | [ERC-8004](https://eips.ethereum.org/EIPS/eip-8004)-inspired discovery, reputation / attestation placeholders | Agents and services find payees and policies without centralizing privacy |
+| **3 — Ecosystem** | [ERC-8004](https://eips.ethereum.org/EIPS/eip-8004) Identity, Reputation, and Validation registries for trustless agent discovery | **Ported** — `@eddalabs/agent-contract` implements all three registries as Compact circuits + TypeScript SDK |
 
 **Build order:** ship Phase 1 first (crypto, Compact evolution, witnesses, DUST for fees), then wire x402, then discovery.
 
@@ -61,6 +61,7 @@ Setup → Discover → Derive stealth → Shielded pay → Scan → Withdraw →
 | `counter-contract` | Reference Compact module + managed bindings; blueprint for `stealth-contract` CI and artifacts |
 | `counter-cli` | Deploy / join / CLI flows for local and preview networks |
 | `stealth-contract` | DKSAP crypto (`@noble/secp256k1`, `ethers`), services, tests, Compact sources under `contracts/` / `src/*.compact` → `managed/` as circuits mature |
+| `agent-contract` | ERC-8004 port — Identity, Reputation, and Validation registries as Compact circuits + in-memory TypeScript SDK (`@eddalabs/agent-contract`) |
 | `frontend-vite-react` | React app: `/counter` uses counter SDK; `/stealth` uses stealth SDK + `@eddalabs/stealth-contract` for client crypto; copies ZK artifacts via `scripts/copy-contract-keys.mjs` |
 
 **Principle:** no third-party stealth npm crate — curve work stays in-repo for auditability and Midnight alignment.
@@ -69,7 +70,8 @@ Setup → Discover → Derive stealth → Shielded pay → Scan → Withdraw →
 
 - **Counter:** Template parity with Midnight quickstart (deploy, prove, private state).
 - **Stealth:** Client DKSAP, mock announcement queue, receive scan UI, stealth contract artifact layout mirroring counter; Compact compilation path exists and will grow with real shielded announcement logic.
-- **x402 / discovery:** Planned (Phase 2–3); not yet primary UX in this repo.
+- **Agent (ERC-8004):** All three registries ported — Identity (register, URI, metadata, wallet), Reputation (feedback, revocation, responses, summaries), Validation (requests, scored responses, validator summaries). Compact circuits compilable today; production ownership proofs and on-chain aggregation documented in `contracts/` design sketches.
+- **x402 / discovery integration:** Planned (Phase 2); not yet primary UX in this repo.
 
 Internal design notes for contributors live under `.cursor/skills/midnight-architect/` (checklists and reference markdown).
 
@@ -137,6 +139,7 @@ npm run dev:frontend
 ├── counter-cli/          # CLI: deploy, join, standalone setup
 ├── counter-contract/     # Counter Compact module + managed artifacts
 ├── stealth-contract/     # DKSAP + stealth Compact (template parity with counter)
+├── agent-contract/       # ERC-8004 port: Identity, Reputation, Validation registries
 └── frontend-vite-react/  # Vite + React + TanStack Router; counter + stealth SDKs
 ```
 
