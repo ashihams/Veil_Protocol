@@ -13,6 +13,9 @@ export * from "./types.js";
 // Encoding / hashing utilities
 export * from "./agent-utils.js";
 
+// Agent metadata schema (ERC-8004 agentURI document)
+export * from "./agent-metadata.js";
+
 // In-memory MVP services
 export { IdentityRegistry } from "./services/identity-registry.js";
 export { ReputationRegistry } from "./services/reputation-registry.js";
