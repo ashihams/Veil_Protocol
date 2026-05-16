@@ -6,7 +6,7 @@ import { sha256hex, compositeKey, zeroBytes32 } from "../agent-utils.js";
  *
  * Mirrors the on-chain ledger maps:
  *   agentCounter   → nextId
- *   agentUriHash   → registration.uriHash
+ *   agentUriHash   → registration.uriHash (key: agentIdKey = SHA-256 UTF-8 decimal id)
  *   agentOwner     → registration.ownerKey
  *   agentWallet    → registration.wallet
  *   metadataStore  → metadata map (compositeKey → MetadataEntry)

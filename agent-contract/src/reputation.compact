@@ -41,21 +41,21 @@ export circuit giveFeedback(
   tag2: Bytes<32>,
   fbHash: Bytes<32>
 ): [] {
-  feedbackValue.insert(compositeKey, encodedValue);
-  feedbackTag1.insert(compositeKey, tag1);
-  feedbackTag2.insert(compositeKey, tag2);
-  feedbackHash.insert(compositeKey, fbHash);
+  feedbackValue.insert(disclose(compositeKey), disclose(encodedValue));
+  feedbackTag1.insert(disclose(compositeKey), disclose(tag1));
+  feedbackTag2.insert(disclose(compositeKey), disclose(tag2));
+  feedbackHash.insert(disclose(compositeKey), disclose(fbHash));
   newFeedbackCount.increment(1);
 }
 
 // Mark a feedback entry as revoked. revokedFlag must be non-zero.
 export circuit revokeFeedback(compositeKey: Bytes<32>, revokedFlag: Bytes<32>): [] {
-  feedbackRevoked.insert(compositeKey, revokedFlag);
+  feedbackRevoked.insert(disclose(compositeKey), disclose(revokedFlag));
   revocationCount.increment(1);
 }
 
 // Agent appends a response to a client's feedback entry.
 export circuit appendResponse(compositeKey: Bytes<32>, respHash: Bytes<32>): [] {
-  responseHash.insert(compositeKey, respHash);
+  responseHash.insert(disclose(compositeKey), disclose(respHash));
   responseCount.increment(1);
 }

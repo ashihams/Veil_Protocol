@@ -12,6 +12,21 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./services": {
+      "types": "./dist/services/index.d.ts",
+      "import": "./dist/services/index.js",
+      "default": "./dist/services/index.js"
+    },
+    "./crypto/types": {
+      "types": "./dist/crypto/types.d.ts",
+      "import": "./dist/crypto/types.js",
+      "default": "./dist/crypto/types.js"
+    },
+    "./crypto/stealth": {
+      "types": "./dist/crypto/stealth.d.ts",
+      "import": "./dist/crypto/stealth.js",
+      "default": "./dist/crypto/stealth.js"
     }
   },
   "scripts": {
@@ -19,6 +34,7 @@
     "build": "node scripts/build.mjs",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:crypto-lifecycle": "tsx src/crypto/test-stealth.ts",
     "lint": "eslint src"
   },
   "dependencies": {
@@ -28,6 +44,7 @@
     "ethers": "^6.13.5"
   },
   "devDependencies": {
+    "tsx": "^4.22.0",
     "typescript": "~5.8.3",
     "vitest": "^3.2.0"
   }

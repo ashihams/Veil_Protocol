@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  StealthKeyRegistry,
+  registry,
   deriveStealthAddress,
   generateStealthKeys,
-  scanAnnouncements,
+  scanCompactAnnouncements,
   type GeneratedStealthKeys,
-  type ScannedPayment,
-  type StealthAnnouncement,
+  type CompactScannedPayment,
+  type CompactStealthAnnouncement,
 } from '@eddalabs/stealth-contract';
 import { Loading } from '@/components/loading';
 import { Button } from '@/components/ui/button';
@@ -16,8 +16,14 @@ import { useStealthContractSubscription } from '@/modules/midnight/stealth-sdk/h
 
 type Tab = 'setup' | 'send' | 'receive';
 
-function bytePreview(bytes: Uint8Array, n = 6): string {
-  return [...bytes.slice(0, n)].map((b) => b.toString(16).padStart(2, '0')).join('') + '…';
+function u8ToHex0x(bytes: Uint8Array): `0x${string}` {
+  const hex = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
+  return `0x${hex}`;
+}
+
+function hexPrivPreview(hexPriv: `0x${string}`, nBytes = 6): string {
+  const h = hexPriv.startsWith('0x') ? hexPriv.slice(2) : hexPriv;
+  return `${h.slice(0, nBytes * 2)}…`;
 }
 
 /** Umbra-style flow: separate viewing & spending keys, send via derived one-time address, receive by scanning. */
@@ -25,14 +31,13 @@ export function StealthApp() {
   const { deployedContractAPI, derivedState, onDeploy, providers } = useStealthContractSubscription();
   const [tab, setTab] = useState<Tab>('setup');
   const [keys, setKeys] = useState<GeneratedStealthKeys | null>(null);
-  const [registry] = useState(() => new StealthKeyRegistry());
   /** Mock announcement log — must be React state so Receive tab re-renders after append. */
-  const [announcementList, setAnnouncementList] = useState<StealthAnnouncement[]>([]);
+  const [announcementList, setAnnouncementList] = useState<CompactStealthAnnouncement[]>([]);
 
   const [recvSpend, setRecvSpend] = useState('');
   const [recvView, setRecvView] = useState('');
   const [sendResult, setSendResult] = useState<ReturnType<typeof deriveStealthAddress> | null>(null);
-  const [scanned, setScanned] = useState<ScannedPayment[]>([]);
+  const [scanned, setScanned] = useState<CompactScannedPayment[]>([]);
   const [chainLoading, setChainLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [hasScanned, setHasScanned] = useState(false);
@@ -50,10 +55,13 @@ export function StealthApp() {
   const generate = useCallback(() => {
     const k = generateStealthKeys();
     setKeys(k);
-    registry.registerKeys('self', { spendPub: k.spendPub, viewPub: k.viewPub });
+    registry.register('self', {
+      spendingPublicKey: k.spendPub,
+      viewingPublicKey: k.viewPub,
+    });
     setRecvSpend(k.spendPub);
     setRecvView(k.viewPub);
-  }, [registry]);
+  }, []);
 
   const deriveSend = useCallback(() => {
     if (!recvSpend || !recvView) return;
@@ -63,15 +71,14 @@ export function StealthApp() {
 
   const recordPayment = useCallback(() => {
     if (!sendResult) return;
-    const ann: StealthAnnouncement = {
+    const ann: CompactStealthAnnouncement = {
       stealthAddress: sendResult.stealthAddress,
-      R: sendResult.R,
+      ephemeralPublicKey: sendResult.R,
+      encryptedRandom: sendResult.ciphertext,
       viewTag: sendResult.viewTag,
-      ciphertext: sendResult.ciphertext,
       amount: 0n,
-      tokenSymbol: 'NIGHT',
-      agentId: 'demo',
-      txId: `local-${Date.now()}`,
+      token: 'NIGHT',
+      timestamp: Date.now(),
     };
     setAnnouncementList((prev) => {
       const next = [...prev, ann];
@@ -82,7 +89,12 @@ export function StealthApp() {
 
   const runScan = useCallback(() => {
     if (!keys) return;
-    const hits = scanAnnouncements(announcementList, keys.viewPriv, keys.spendPub, keys.spendPriv);
+    const hits = scanCompactAnnouncements(
+      announcementList,
+      u8ToHex0x(keys.viewPriv),
+      keys.spendPub,
+      u8ToHex0x(keys.spendPriv),
+    );
     setScanned(hits);
     setHasScanned(true);
   }, [keys, announcementList]);
@@ -259,7 +271,7 @@ export function StealthApp() {
                     <ul className="space-y-3">
                       {scanned.map((hit, i) => (
                         <li
-                          key={`${hit.announcement.txId}-${i}`}
+                          key={`${hit.timestamp}-${i}`}
                           className="rounded-lg border border-emerald-500/25 bg-emerald-950/20 p-4 space-y-3"
                         >
                           <p className="text-sm font-medium text-emerald-100">Incoming match #{i + 1}</p>
@@ -268,15 +280,10 @@ export function StealthApp() {
                               <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" aria-hidden />
                               <span>
                                 <span className="text-violet-200/80">Matched payment · </span>
-                                {hit.announcement.tokenSymbol} {String(hit.announcement.amount)} · tx{' '}
-                                <span className="font-mono text-xs break-all">{hit.announcement.txId}</span>
-                              </span>
-                            </li>
-                            <li className="flex gap-2 items-start">
-                              <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" aria-hidden />
-                              <span>
-                                <span className="text-violet-200/80">View tag matched · </span>
-                                <span className="font-mono">{hit.announcement.viewTag}</span>
+                                {hit.token} {String(hit.amount)} · recorded{' '}
+                                <span className="font-mono text-xs tabular-nums">
+                                  {new Date(hit.timestamp).toLocaleString()}
+                                </span>
                               </span>
                             </li>
                             <li className="flex gap-2 items-start">
@@ -291,12 +298,12 @@ export function StealthApp() {
                               <span>
                                 <span className="text-violet-200/80">Stealth recovery successful · </span>
                                 one-time spending secret{' '}
-                                <span className="font-mono text-xs">{bytePreview(hit.stealthPriv)}</span>
+                                <span className="font-mono text-xs">{hexPrivPreview(hit.stealthPrivateKey)}</span>
                               </span>
                             </li>
                           </ul>
                           <p className="text-xs font-mono text-violet-300/80 break-all pt-2 border-t border-white/10">
-                            {hit.announcement.stealthAddress}
+                            {hit.stealthAddress}
                           </p>
                         </li>
                       ))}

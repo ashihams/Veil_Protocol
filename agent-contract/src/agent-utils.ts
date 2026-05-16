@@ -20,6 +20,14 @@ export function compositeKey(...parts: (string | bigint | number)[]): Bytes32 {
   return `0x${bytesToHex(sha256(concatBytes(...encoded)))}`;
 }
 
+/**
+ * Map key for IdentityRegistry ledgers (agentUriHash, agentWallet, agentOwner).
+ * Matches reputation.compact: agentIdKey = SHA-256(UTF-8 decimal string of agentId).
+ */
+export function agentIdKey(id: AgentId): Bytes32 {
+  return sha256hex(String(id));
+}
+
 // ─── Bytes32 encoding / decoding ──────────────────────────────────────────────
 
 /** All-zero Bytes32 — used to represent an unset wallet on-chain. */

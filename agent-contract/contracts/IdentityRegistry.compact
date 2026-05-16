@@ -7,10 +7,10 @@
 // In MVP, setAgentURI / setMetadata / setAgentWallet accept any caller.
 // Production adds an ownership proof witness to each:
 //
-//   export circuit setAgentURI(agentId: Counter, newUriHash: Bytes<32>): [] {
-//     witness ownerProof: Bytes<32>;   // ECDSA/Schnorr sig over (agentId ++ newUriHash)
-//     assert(verifySignature(ownerProof, agentOwner.lookup(agentId), hash(agentId ++ newUriHash)));
-//     agentUriHash.insert(agentId, newUriHash);
+//   export circuit setAgentURI(agentIdKey: Bytes<32>, newUriHash: Bytes<32>): [] {
+//     witness ownerProof: Bytes<32>;   // ECDSA/Schnorr sig over (agentIdKey ++ newUriHash)
+//     assert(verifySignature(ownerProof, agentOwner.lookup(agentIdKey), hash(agentIdKey ++ newUriHash)));
+//     agentUriHash.insert(agentIdKey, newUriHash);
 //     uriUpdateCount.increment(1);
 //   }
 //
@@ -19,16 +19,16 @@
 // ─── setAgentWallet with deadline + signature ────────────────────────────────
 //
 //   export circuit setAgentWallet(
-//     agentId: Counter,
+//     agentIdKey: Bytes<32>,
 //     walletBytes: Bytes<32>,
 //     deadline: Bytes<32>,         // 8-byte unix timestamp padded to 32 bytes
-//     sig: Bytes<32>               // sig over (agentId ++ walletBytes ++ deadline)
+//     sig: Bytes<32>               // sig over (agentIdKey ++ walletBytes ++ deadline)
 //   ): [] {
 //     // Deadline check requires a block timestamp oracle (future Compact feature).
 //     // assert(currentBlock() < decodeUint64(deadline));
-//     assert(verifySignature(sig, agentOwner.lookup(agentId),
-//                            hash(agentId ++ walletBytes ++ deadline)));
-//     agentWallet.insert(agentId, walletBytes);
+//     assert(verifySignature(sig, agentOwner.lookup(agentIdKey),
+//                            hash(agentIdKey ++ walletBytes ++ deadline)));
+//     agentWallet.insert(agentIdKey, walletBytes);
 //   }
 //
 // ─── Per-key metadata access control ────────────────────────────────────────

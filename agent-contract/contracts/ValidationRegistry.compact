@@ -14,7 +14,7 @@
 //     approvedValidators.insert(validatorKey, validatorAgentId);
 //   }
 //
-//   In validationResponse circuit:
+//   In submitValidationResponse circuit:
 //     assert(approvedValidators.member(validatorKey));
 //
 // ─── Duplicate requestHash prevention ────────────────────────────────────────
@@ -34,7 +34,7 @@
 //   export ledger validationCountByAgent: Map<Bytes<32>, Counter>;
 //   // summaryKey = SHA-256(agentId ++ tag)
 //
-//   In validationResponse circuit:
+//   In submitValidationResponse circuit:
 //     validationSumByAgent.insert(summaryKey, addByte(currentSum, responseEncoded));
 //     validationCountByAgent[summaryKey].increment(1);
 //
@@ -44,7 +44,7 @@
 //
 // ERC-8004 specifies response ∈ [0, 100]. Compact can enforce this:
 //
-//   In validationResponse circuit:
+//   In submitValidationResponse circuit:
 //     assert(responseEncoded[31] <= 100);
 //     // Compact byte comparison syntax TBD per compiler version.
 //

@@ -1,133 +1,132 @@
 import { describe, expect, it } from "vitest";
 import {
   AnnouncementStore,
-  checkAnnouncement,
-  deriveStealthAddress,
-  generatePaymentProof,
-  generateStealthKeys,
-  PaymentVerifier,
-  scanAnnouncements,
   StealthKeyRegistry,
+  PaymentVerifier,
+  buildPaymentProof,
+  checkCompactAnnouncement,
+  deriveCompactStealthAddress,
+  generateCompactStealthKeys,
+  scanCompactAnnouncements,
+  generatePaymentProof,
   verifyPaymentProof,
 } from "./index.js";
+import type { CompactStealthAnnouncement } from "./index.js";
 
 describe("DKSAP stealth core (Phase 1)", () => {
   it("receiver detects own shielded announcement; stranger does not", () => {
-    const alice = generateStealthKeys();
-    const bob = generateStealthKeys();
+    const alice = generateCompactStealthKeys();
+    const bob = generateCompactStealthKeys();
     const registry = new StealthKeyRegistry();
-    registry.registerKeys("alice", {
-      spendPub: alice.spendPub,
-      viewPub: alice.viewPub,
+    registry.register("alice", {
+      spendingPublicKey: alice.spendingPublicKey,
+      viewingPublicKey: alice.viewingPublicKey,
     });
 
-    const derived = deriveStealthAddress(registry.getKeysOrThrow("alice"));
-    const ann = {
+    const pub = registry.lookup("alice")!;
+    const derived = deriveCompactStealthAddress(pub);
+    const ann: CompactStealthAnnouncement = {
       stealthAddress: derived.stealthAddress,
-      R: derived.R,
+      ephemeralPublicKey: derived.ephemeralPublicKey,
+      encryptedRandom: derived.encryptedRandom,
       viewTag: derived.viewTag,
-      ciphertext: derived.ciphertext,
       amount: 1_000_000n,
-      tokenSymbol: "NIGHT",
-      agentId: "alice",
-      txId: "tx-mock-1",
+      token: "NIGHT",
+      timestamp: 1,
     };
 
-    const hitAlice = checkAnnouncement(
+    const hitAlice = checkCompactAnnouncement(
       ann,
-      alice.viewPriv,
-      alice.spendPub,
-      alice.spendPriv,
+      alice.viewingPrivateKey,
+      alice.spendingPublicKey,
+      alice.spendingPrivateKey,
     );
     expect(hitAlice).not.toBeNull();
-    expect(hitAlice!.stealthPriv).toHaveLength(32);
+    expect(hitAlice!.stealthPrivateKey.startsWith("0x")).toBe(true);
 
-    const missBob = checkAnnouncement(
+    const missBob = checkCompactAnnouncement(
       ann,
-      bob.viewPriv,
-      bob.spendPub,
-      bob.spendPriv,
+      bob.viewingPrivateKey,
+      bob.spendingPublicKey,
+      bob.spendingPrivateKey,
     );
     expect(missBob).toBeNull();
   });
 
   it("view tag fast path drops unrelated announcements", () => {
-    const recv = generateStealthKeys();
-    const d1 = deriveStealthAddress({
-      spendPub: recv.spendPub,
-      viewPub: recv.viewPub,
+    const recv = generateCompactStealthKeys();
+    const d1 = deriveCompactStealthAddress({
+      spendingPublicKey: recv.spendingPublicKey,
+      viewingPublicKey: recv.viewingPublicKey,
     });
-    const d2 = deriveStealthAddress({
-      spendPub: recv.spendPub,
-      viewPub: recv.viewPub,
+    const d2 = deriveCompactStealthAddress({
+      spendingPublicKey: recv.spendingPublicKey,
+      viewingPublicKey: recv.viewingPublicKey,
     });
 
-    const noise = {
+    const noise: CompactStealthAnnouncement = {
       stealthAddress: d1.stealthAddress,
-      R: d1.R,
+      ephemeralPublicKey: d1.ephemeralPublicKey,
+      encryptedRandom: d1.encryptedRandom,
       viewTag: d1.viewTag,
-      ciphertext: d1.ciphertext,
       amount: 1n,
-      tokenSymbol: "X",
-      agentId: "a",
-      txId: "t1",
+      token: "X",
+      timestamp: 1,
     };
-    const real = {
+    const real: CompactStealthAnnouncement = {
       stealthAddress: d2.stealthAddress,
-      R: d2.R,
+      ephemeralPublicKey: d2.ephemeralPublicKey,
+      encryptedRandom: d2.encryptedRandom,
       viewTag: d2.viewTag,
-      ciphertext: d2.ciphertext,
       amount: 2n,
-      tokenSymbol: "X",
-      agentId: "a",
-      txId: "t2",
+      token: "X",
+      timestamp: 2,
     };
 
     const mixed = [{ ...noise, viewTag: 255 }, real];
 
-    const found = scanAnnouncements(
+    const found = scanCompactAnnouncements(
       mixed,
-      recv.viewPriv,
-      recv.spendPub,
-      recv.spendPriv,
+      recv.viewingPrivateKey,
+      recv.spendingPublicKey,
+      recv.spendingPrivateKey,
     );
     expect(found).toHaveLength(1);
-    expect(found[0]!.announcement.txId).toBe("t2");
+    expect(found[0]!.timestamp).toBe(2);
   });
 
   it("AnnouncementStore + registry models shielded lifecycle", () => {
-    const keys = generateStealthKeys();
+    const keys = generateCompactStealthKeys();
     const reg = new StealthKeyRegistry();
-    reg.registerKeys("payee", {
-      spendPub: keys.spendPub,
-      viewPub: keys.viewPub,
+    reg.register("payee", {
+      spendingPublicKey: keys.spendingPublicKey,
+      viewingPublicKey: keys.viewingPublicKey,
     });
     const store = new AnnouncementStore();
 
-    const pay = deriveStealthAddress(reg.getKeysOrThrow("payee"));
-    store.appendShielded({
+    const payee = reg.lookup("payee")!;
+    const pay = deriveCompactStealthAddress(payee);
+    store.add({
       stealthAddress: pay.stealthAddress,
-      R: pay.R,
+      ephemeralPublicKey: pay.ephemeralPublicKey,
+      encryptedRandom: pay.encryptedRandom,
       viewTag: pay.viewTag,
-      ciphertext: pay.ciphertext,
       amount: 42n,
-      tokenSymbol: "DEMO",
-      agentId: "payee",
-      txId: "zk-tx-1",
+      token: "DEMO",
+      timestamp: Date.now(),
     });
 
-    const scanned = scanAnnouncements(
+    const scanned = scanCompactAnnouncements(
       store.getAll(),
-      keys.viewPriv,
-      keys.spendPub,
-      keys.spendPriv,
+      keys.viewingPrivateKey,
+      keys.spendingPublicKey,
+      keys.spendingPrivateKey,
     );
     expect(scanned).toHaveLength(1);
   });
 
-  it("payment proof verifies (x402 unlock primitive)", () => {
+  it("legacy HMAC unlock primitive (stealth.js)", () => {
     const secret = new TextEncoder().encode("demo-provider-hmac");
-    const v = new PaymentVerifier(secret);
     const payload = {
       agentId: "a1",
       stealthAddress: "0x0000000000000000000000000000000000000001",
@@ -136,13 +135,52 @@ describe("DKSAP stealth core (Phase 1)", () => {
       txId: "tx",
       paymentRequestId: "pr-1",
     };
-    const proof = v.createProof(payload);
-    expect(v.verify(payload, proof)).toBe(true);
+    const proof = generatePaymentProof(payload, secret);
     expect(verifyPaymentProof(payload, secret, proof)).toBe(true);
     const bad = generatePaymentProof(
       payload,
       new TextEncoder().encode("other"),
     );
-    expect(v.verify(payload, bad)).toBe(false);
+    expect(verifyPaymentProof(payload, secret, bad)).toBe(false);
+  });
+
+  it("PaymentVerifier verifyAndMark (ECDSA attestation + replay guard)", () => {
+    const keys = generateCompactStealthKeys();
+    const derived = deriveCompactStealthAddress({
+      spendingPublicKey: keys.spendingPublicKey,
+      viewingPublicKey: keys.viewingPublicKey,
+    });
+    const ann: CompactStealthAnnouncement = {
+      stealthAddress: derived.stealthAddress,
+      ephemeralPublicKey: derived.ephemeralPublicKey,
+      encryptedRandom: derived.encryptedRandom,
+      viewTag: derived.viewTag,
+      amount: 1n,
+      token: "DUST",
+      timestamp: 0,
+    };
+    const hit = checkCompactAnnouncement(
+      ann,
+      keys.viewingPrivateKey,
+      keys.spendingPublicKey,
+      keys.spendingPrivateKey,
+    );
+    expect(hit).not.toBeNull();
+
+    const proof = buildPaymentProof(
+      hit!.stealthAddress,
+      "0x" + "cc".repeat(32),
+      "once-only-nonce",
+      hit!.stealthPrivateKey,
+    );
+    const v = new PaymentVerifier();
+    const ok = v.verifyAndMark(proof);
+    expect(ok.valid).toBe(true);
+    if (ok.valid) {
+      expect(ok.resourceToken.length).toBeGreaterThan(10);
+    }
+
+    const replay = v.verifyAndMark(proof);
+    expect(replay.valid).toBe(false);
   });
 });
