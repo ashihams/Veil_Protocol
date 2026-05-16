@@ -52,7 +52,10 @@ describe("agent-server x402 flow", () => {
     server.listen(0, "127.0.0.1", () => { port = getPort(server); resolve(); });
   }));
 
-  afterAll(() => new Promise<void>((resolve) => server.close(() => resolve())));
+  afterAll(() => new Promise<void>((resolve) => {
+    server.closeAllConnections?.();
+    server.close(() => resolve());
+  }));
 
   it("no payment header → 402 + X-Payment-Required header", async () => {
     const { status, headers } = await post(port, { op: "add", a: 2, b: 3 });
