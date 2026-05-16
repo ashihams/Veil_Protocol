@@ -22,8 +22,15 @@ function post(
   return new Promise((resolve, reject) => {
     const json = JSON.stringify(body);
     const req = http.request(
-      { hostname: "127.0.0.1", port, path: "/task", method: "POST",
-        headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(json), ...headers } },
+      {
+        hostname: "127.0.0.1", port, path: "/task", method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(json),
+          "Connection": "close",
+          ...headers,
+        },
+      },
       (res) => {
         const chunks: Buffer[] = [];
         res.on("data", (c: Buffer) => chunks.push(c));
