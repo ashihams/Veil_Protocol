@@ -69,7 +69,39 @@ npm run dev:agent-server
 node agent-server/scripts/demo-client.mjs
 ```
 
-### Protocol identity (DKSAP on Midnight)
+### Agent metadata (ERC-8004 agentURI)
+
+Each agent registered in the Identity Registry points to a JSON metadata document stored on IPFS. The SHA-256 of its canonical form is committed on-chain as `uriHash`.
+
+**Schema** (`AgentMetadata` in `@eddalabs/agent-contract`):
+
+| Field | Required | Description |
+|---|---|---|
+| `type` | ✓ | `"https://eips.ethereum.org/EIPS/eip-8004#registration-v1"` |
+| `name` | ✓ | Human-readable agent name |
+| `description` | ✓ | What it does, pricing, interaction notes |
+| `active` | ✓ | Whether the agent is currently accepting work |
+| `x402Support` | ✓ | Whether the agent accepts x402 payment-gated requests |
+| `services` | ✓ | Array of `{name, endpoint, version}` — `"web"`, `"A2A"`, `"MCP"`, etc. |
+| `image` | — | URL to agent avatar |
+| `registrations` | — | Cross-chain registry references `{chain, registry, agentId}` |
+| `supportedTrust` | — | `"reputation"` \| `"crypto-economic"` \| `"tee-attestation"` |
+
+**Demo agent metadata (Add Agent) — pinned to IPFS:**
+
+- **CID:** `QmdJr4hbTAVwx1LtBVGuwyjf8kQVVFGSRbPBvby5nB7kFp`
+- **agentURI:** `ipfs://QmdJr4hbTAVwx1LtBVGuwyjf8kQVVFGSRbPBvby5nB7kFp`
+- **Gateway:** [View on Pinata](https://gateway.pinata.cloud/ipfs/QmdJr4hbTAVwx1LtBVGuwyjf8kQVVFGSRbPBvby5nB7kFp)
+
+To pin your own agent metadata:
+```bash
+node agent-server/scripts/pin-metadata.mjs
+# prints CID + agentURI + gateway URL
+```
+
+The returned `agentURI` is passed to `IdentityRegistry.register()` and its hash is stored on-chain.
+
+
 
 - **Receiver:** spending and viewing secrets `p_spend`, `p_view`; public points `P_spend`, `P_view` published (e.g. registry).
 - **Sender:** ephemeral scalar `r`, `R = r·G`; shared with viewing key; `S = r·P_view`; `h = SHA256(compress(S))`; **view tag** `h[0]`; one-time spend point `P_stealth = h_scalar·G + P_spend`; address derived from `P_stealth` (see [ERC-5564](https://eips.ethereum.org/EIPS/eip-5564) ecosystem alignment).
@@ -94,8 +126,8 @@ Setup → Discover → Derive stealth → Shielded pay → Scan → Withdraw →
 | `counter-contract` | Reference Compact module + managed bindings; blueprint for `stealth-contract` CI and artifacts |
 | `counter-cli` | Deploy / join / CLI flows for local and preview networks |
 | `stealth-contract` | DKSAP crypto (`@noble/secp256k1`, `ethers`), services, tests, Compact sources under `contracts/` / `src/*.compact` → `managed/` as circuits mature |
-| `agent-contract` | ERC-8004 port — Identity, Reputation, and Validation registries as Compact circuits + in-memory TypeScript SDK (`@eddalabs/agent-contract`) |
-| `agent-server` | x402 agent marketplace — HTTP 402 payment gate, HMAC-SHA256 proof verification, in-memory agent pool dispatching `add(a,b)` tasks |
+| `agent-contract` | ERC-8004 port — Identity, Reputation, and Validation registries as Compact circuits + TypeScript SDK; `AgentMetadata` schema + `hashAgentMetadata` for IPFS-pinned agent URIs |
+| `agent-server` | x402 agent marketplace — HTTP 402 payment gate, HMAC-SHA256 proof verification, in-memory agent pool dispatching `add(a,b)` tasks; `pin-metadata.mjs` script publishes `AgentMetadata` to IPFS via Pinata |
 | `frontend-vite-react` | React app: `/counter` uses counter SDK; `/stealth` uses stealth SDK + `@eddalabs/stealth-contract` for client crypto; copies ZK artifacts via `scripts/copy-contract-keys.mjs` |
 
 **Principle:** no third-party stealth npm crate — curve work stays in-repo for auditability and Midnight alignment.
@@ -104,7 +136,7 @@ Setup → Discover → Derive stealth → Shielded pay → Scan → Withdraw →
 
 - **Counter:** Template parity with Midnight quickstart (deploy, prove, private state).
 - **Stealth:** Client DKSAP, mock announcement queue, receive scan UI, stealth contract artifact layout mirroring counter; Compact compilation path exists and will grow with real shielded announcement logic.
-- **Agent (ERC-8004):** All three registries ported — Identity (register, URI, metadata, wallet), Reputation (feedback, revocation, responses, summaries), Validation (requests, scored responses, validator summaries). Compact circuits compilable today; production ownership proofs and on-chain aggregation documented in `contracts/` design sketches.
+- **Agent (ERC-8004):** All three registries ported — Identity (register, URI, metadata, wallet), Reputation (feedback, revocation, responses, summaries), Validation (requests, scored responses, validator summaries). `AgentMetadata` TypeScript schema + `hashAgentMetadata` helper for IPFS-pinned agent URIs. Compact circuits compilable today; production ownership proofs and on-chain aggregation documented in `contracts/` design sketches.
 - **x402 Agent Marketplace:** `agent-server` implements the full HTTP 402 flow — challenge, HMAC-SHA256 payment proof verification, in-memory agent pool, and settlement response. Demo client at `agent-server/scripts/demo-client.mjs`.
 - **x402 / discovery integration:** Planned deeper integration (Midnight on-chain settlement, full discovery via Phase 3 registries).
 
@@ -146,6 +178,7 @@ Build scripts use Node’s `fs` helpers so they run cleanly on Windows, macOS, a
 
 1. **`counter-cli`:** copy [`counter-cli/.env_template`](./counter-cli/.env_template) to `.env`.
 2. **`frontend-vite-react`:** copy [`frontend-vite-react/.env_template`](./frontend-vite-react/.env_template) to `.env` (includes `VITE_STEALTH_CONTRACT_ADDRESS` for the stealth demo).
+3. **Root `.env`** (optional): add `PINATA_API_KEY` and `PINATA_API_SECRET` to enable `pin-metadata.mjs`.
 
 ## Development
 
@@ -197,8 +230,9 @@ npm run dev:frontend
 
 - [Midnight docs](https://docs.midnight.network) · [midnightntwrk on GitHub](https://github.com/midnightntwrk)
 - [ERC-5564](https://eips.ethereum.org/EIPS/eip-5564) (stealth meta-addresses)
-- [x402](https://www.x402.org)
-- [ERC-8004](https://eips.ethereum.org/EIPS/eip-8004)
+- [x402](https://www.x402.org) · [x402 specification v2](https://github.com/coinbase/x402/blob/main/specs/x402-specification-v2.md)
+- [ERC-8004](https://eips.ethereum.org/EIPS/eip-8004) (trustless agents)
+- [Pinata](https://pinata.cloud) (IPFS pinning for agent metadata)
 
 ---
 
