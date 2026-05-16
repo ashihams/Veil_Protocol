@@ -1,0 +1,53 @@
+// ReputationRegistry.compact — full production design sketch.
+// This file documents the intended production extensions beyond src/reputation.compact.
+// It is NOT compiled; it serves as an architecture reference.
+//
+// ─── On-chain getSummary optimisation ────────────────────────────────────────
+//
+// ERC-8004 getSummary(agentId, clientAddresses[], tag1, tag2) requires iterating
+// all feedback entries. Compact Map cannot be enumerated on-chain. Two options:
+//
+// Option A — Running aggregate (recommended for gas efficiency):
+//
+//   export ledger summarySum: Map<Bytes<32>, Bytes<32>>;
+//   export ledger summaryCount: Map<Bytes<32>, Counter>;
+//   // summaryKey = SHA-256(agentId ++ tag1 ++ tag2)
+//
+//   In giveFeedback circuit:
+//     summarySum.insert(summaryKey, addEncoded(summarySum.lookup(summaryKey), encodedValue));
+//     summaryCount[summaryKey].increment(1);
+//
+//   In revokeFeedback circuit:
+//     summarySum.insert(summaryKey, subEncoded(summarySum.lookup(summaryKey), originalValue));
+//     summaryCount[summaryKey].decrement(1);  // if Counter supports decrement
+//
+// Option B — Off-chain indexer materialised view (MVP path, already implemented in TS service):
+//   Index all giveFeedback / revokeFeedback events (via newFeedbackCount / revocationCount
+//   counters) and maintain the aggregate in the indexer database.
+//
+// ─── Per-client feedback count (production feedbackIndex) ───────────────────
+//
+//   export ledger perClientCount: Map<Bytes<32>, Counter>;
+//   // clientCountKey = SHA-256(agentId ++ clientKey)
+//
+//   In giveFeedback:
+//     perClientCount[clientCountKey].increment(1);
+//     // feedbackIndex = perClientCount[clientCountKey].read() - 1
+//
+//   This allows the compositeKey to be deterministically computed on-chain
+//   without the caller providing an explicit feedbackIndex.
+//
+// ─── Feedback value encoding ─────────────────────────────────────────────────
+//
+// ERC-8004 uses (int128 value, uint8 valueDecimals).
+// Compact Bytes<32> encoding:
+//   bytes  0-15: int128 value as big-endian signed integer
+//   bytes 16-30: zero-padded
+//   byte     31: uint8 valueDecimals
+//
+// TypeScript encodeValue / decodeValue helpers in agent-utils.ts implement this.
+//
+// Examples from ERC-8004:
+//   "starred" quality 87/100  → value: 87,    decimals: 0
+//   "uptime"  99.77%          → value: 9977,  decimals: 2
+//   "latency" 143.5ms         → value: 1435,  decimals: 1

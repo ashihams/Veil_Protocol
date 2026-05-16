@@ -1,0 +1,56 @@
+pragma language_version >= 0.20;
+
+import CompactStandardLibrary;
+
+// Auto-incrementing agent ID. Post-increment value = agentId (first registered = 1).
+export ledger agentCounter: Counter;
+
+// agentId → SHA-256(agentURI). URIs stored off-chain; only the hash is committed.
+export ledger agentUriHash: Map<Counter, Bytes<32>>;
+
+// agentId → wallet address (Bytes<32>). Zero value = unset.
+export ledger agentWallet: Map<Counter, Bytes<32>>;
+
+// agentId → owner public key (Bytes<32>). Set at registration; used for ownership checks.
+export ledger agentOwner: Map<Counter, Bytes<32>>;
+
+// SHA-256(agentId ++ metaKey) → SHA-256(metaValue). Raw strings stay off-chain.
+export ledger metadataStore: Map<Bytes<32>, Bytes<32>>;
+
+// Event substitutes: Compact has no emit; off-chain indexers poll these counters.
+export ledger registrationCount: Counter;
+export ledger uriUpdateCount: Counter;
+export ledger metadataSetCount: Counter;
+
+// Register a new agent. The caller supplies the URI hash and their owner key.
+// Read agentCounter after this call to obtain the assigned agentId.
+// MVP: no ownership proof required — production adds witness ownerProof (see contracts/IdentityRegistry.compact).
+export circuit register(uriHash: Bytes<32>, ownerKey: Bytes<32>): [] {
+  agentCounter.increment(1);
+  agentUriHash.insert(agentCounter.read(), uriHash);
+  agentOwner.insert(agentCounter.read(), ownerKey);
+  registrationCount.increment(1);
+}
+
+// Update the URI hash for an existing agent.
+export circuit setAgentURI(agentId: Counter, newUriHash: Bytes<32>): [] {
+  agentUriHash.insert(agentId, newUriHash);
+  uriUpdateCount.increment(1);
+}
+
+// Write a metadata entry. compositeKey = SHA-256(agentId ++ metaKey) computed off-chain.
+export circuit setMetadata(compositeKey: Bytes<32>, valueHash: Bytes<32>): [] {
+  metadataStore.insert(compositeKey, valueHash);
+  metadataSetCount.increment(1);
+}
+
+// Bind a payment wallet address to an agent.
+export circuit setAgentWallet(agentId: Counter, walletBytes: Bytes<32>): [] {
+  agentWallet.insert(agentId, walletBytes);
+}
+
+// Clear the wallet binding by writing a zero value.
+// The TypeScript layer treats all-zero Bytes<32> as "unset".
+export circuit unsetAgentWallet(agentId: Counter): [] {
+  agentWallet.insert(agentId, pad(32, []));
+}

@@ -1,0 +1,32 @@
+{
+  "name": "@eddalabs/agent-contract",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "description": "ERC-8004 Trustless Agent registries on Midnight — Identity, Reputation, Validation",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "compact": "compact compile +0.28.0 src/identity.compact src/managed/identity && compact compile +0.28.0 src/reputation.compact src/managed/reputation && compact compile +0.28.0 src/validation.compact src/managed/validation",
+    "build": "node scripts/build.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@midnight-ntwrk/compact-runtime": "0.14.0",
+    "@noble/hashes": "^1.7.1"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.0"
+  }
+}

@@ -1,0 +1,54 @@
+// IdentityRegistry.compact — full production design sketch.
+// This file documents the intended production extensions beyond src/identity.compact.
+// It is NOT compiled; it serves as an architecture reference.
+//
+// ─── Ownership-gated circuits ───────────────────────────────────────────────
+//
+// In MVP, setAgentURI / setMetadata / setAgentWallet accept any caller.
+// Production adds an ownership proof witness to each:
+//
+//   export circuit setAgentURI(agentId: Counter, newUriHash: Bytes<32>): [] {
+//     witness ownerProof: Bytes<32>;   // ECDSA/Schnorr sig over (agentId ++ newUriHash)
+//     assert(verifySignature(ownerProof, agentOwner.lookup(agentId), hash(agentId ++ newUriHash)));
+//     agentUriHash.insert(agentId, newUriHash);
+//     uriUpdateCount.increment(1);
+//   }
+//
+// Same pattern applies to setMetadata and setAgentWallet.
+//
+// ─── setAgentWallet with deadline + signature ────────────────────────────────
+//
+//   export circuit setAgentWallet(
+//     agentId: Counter,
+//     walletBytes: Bytes<32>,
+//     deadline: Bytes<32>,         // 8-byte unix timestamp padded to 32 bytes
+//     sig: Bytes<32>               // sig over (agentId ++ walletBytes ++ deadline)
+//   ): [] {
+//     // Deadline check requires a block timestamp oracle (future Compact feature).
+//     // assert(currentBlock() < decodeUint64(deadline));
+//     assert(verifySignature(sig, agentOwner.lookup(agentId),
+//                            hash(agentId ++ walletBytes ++ deadline)));
+//     agentWallet.insert(agentId, walletBytes);
+//   }
+//
+// ─── Per-key metadata access control ────────────────────────────────────────
+//
+//   export ledger metadataPolicy: Map<Bytes<32>, Bytes<32>>;
+//   // compositeKey → policy hash. Policy: 0x00 = owner-only, 0x01 = public write.
+//
+//   export circuit setMetadataPolicy(compositeKey: Bytes<32>, policy: Bytes<32>): [] {
+//     witness ownerProof: Bytes<32>;
+//     assert(verifyOwner(ownerProof, ...));
+//     metadataPolicy.insert(compositeKey, policy);
+//   }
+//
+//   // setMetadata checks policy before writing:
+//   //   if policy == 0x00: require ownerProof witness
+//   //   if policy == 0x01: allow anyone
+//
+// ─── Agent URI format (off-chain) ────────────────────────────────────────────
+//
+// Per ERC-8004, agentURI resolves to a JSON file with required fields:
+//   { type, name, description, image, services: [...] }
+// Optional: x402Support, active, registrations, supportedTrust
+// The on-chain SHA-256 hash pins the content; consumers fetch + verify off-chain.
