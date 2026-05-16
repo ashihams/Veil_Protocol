@@ -36,15 +36,15 @@ export circuit validationRequest(
   requestUriHash: Bytes<32>,
   timestamp: Bytes<32>
 ): [] {
-  validationAgentId.insert(requestHash, agentIdBytes);
-  validationValidator.insert(requestHash, validatorKey);
-  validationLastUpdate.insert(requestHash, timestamp);
+  validationAgentId.insert(disclose(requestHash), disclose(agentIdBytes));
+  validationValidator.insert(disclose(requestHash), disclose(validatorKey));
+  validationLastUpdate.insert(disclose(requestHash), disclose(timestamp));
   requestCount.increment(1);
 }
 
 // A validator submits a response (0-100) for a pending request.
 // responseEncoded: single byte (0x00-0x64) packed into the last byte of a 32-byte buffer.
-export circuit validationResponse(
+export circuit submitValidationResponse(
   requestHash: Bytes<32>,
   responseEncoded: Bytes<32>,
   responseUriHash: Bytes<32>,
@@ -52,9 +52,9 @@ export circuit validationResponse(
   tag: Bytes<32>,
   timestamp: Bytes<32>
 ): [] {
-  validationResponse.insert(requestHash, responseEncoded);
-  validationRespHash.insert(requestHash, respHash);
-  validationTag.insert(requestHash, tag);
-  validationLastUpdate.insert(requestHash, timestamp);
+  validationResponse.insert(disclose(requestHash), disclose(responseEncoded));
+  validationRespHash.insert(disclose(requestHash), disclose(respHash));
+  validationTag.insert(disclose(requestHash), disclose(tag));
+  validationLastUpdate.insert(disclose(requestHash), disclose(timestamp));
   responseCountVal.increment(1);
 }
