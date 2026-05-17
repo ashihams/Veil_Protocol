@@ -1,4 +1,4 @@
-import { start } from "../src/server.js";
+import { start } from "./server.js";
 
 // Default dev secret — override via AGENT_SERVER_SECRET env var
 const secretStr = process.env.AGENT_SERVER_SECRET ?? "midnight-demo-secret";
