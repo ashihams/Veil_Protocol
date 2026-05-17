@@ -12,7 +12,21 @@ Configuration in the repo is defined in **`vercel.json`** (Vercel reads it when 
 | `outputDirectory` | `frontend-vite-react/dist` | Vercel serves this folder as the deployment. |
 | `devCommand` | `npm run dev:frontend` | Used when you run `vercel dev` locally (optional). |
 
-Do **not** set **Root Directory** in the Vercel UI to `frontend-vite-react` unless you change these paths and run install/build from that folder only.
+### If Vercel Root Directory is **`frontend-vite-react`** (and you cannot change it)
+
+Some flows lock the subdirectory at creation. That is fine: the repo includes **`frontend-vite-react/vercel.json`**, which:
+
+- runs **`cd .. && npm install`** so workspace deps (`@eddalabs/stealth-contract`, etc.) resolve from the monorepo root  
+- runs **`cd .. && npm run build-production`** so `git lfs pull`, `stealth-contract` build, and `copy-contract-keys` + Vite all run from the real repo root  
+- sets **`outputDirectory`** to **`dist`** (relative to `frontend-vite-react`, i.e. this app’s `dist/`)
+
+In the dashboard, leave **Build and Output Settings** matching that file (or clear overrides so Vercel picks it up). **Framework Preset:** Vite.
+
+**To use repo root instead later:** create a new Vercel project from the same Git repo with an **empty** Root Directory, or see Vercel **Settings → General → Root Directory** on supported plans.
+
+---
+
+**Preferred:** Leave **Root Directory** empty at import time and use the root **`vercel.json`** only. Only rely on **`frontend-vite-react/vercel.json`** when the UI forces a subdirectory root.
 
 ---
 
@@ -30,8 +44,8 @@ Do **not** set **Root Directory** in the Vercel UI to `frontend-vite-react` unle
 ### 1. Create the project
 
 1. **Import** the Git repository in the Vercel dashboard.  
-2. Leave **Root Directory** empty (repository root).  
-3. Confirm the dashboard picked up **`vercel.json`** (Build Command / Output Directory should match the table above). Override manually if an old cache shows different values.
+2. **Root Directory:** prefer **empty** (repository root) so the root **`vercel.json`** applies. If the project is already tied to **`frontend-vite-react`**, keep it — ensure **`frontend-vite-react/vercel.json`** is picked up (see table above).  
+3. Confirm **Build Command** / **Output Directory** match the active `vercel.json`. Override manually if an old cache shows different values.
 
 ### 2. Enable Git LFS (required)
 
@@ -143,7 +157,7 @@ After changing env vars, **redeploy** so Vite embeds the new `VITE_*` values at 
 **First production deploy**
 
 - [ ] Git LFS enabled on the Vercel project  
-- [ ] Root directory = repo root; `vercel.json` settings applied  
+- [ ] Root directory either **repo root** (root `vercel.json`) or **`frontend-vite-react`** with matching `frontend-vite-react/vercel.json` / dashboard commands  
 - [ ] `VITE_STEALTH_KEY_REGISTRY_ADDRESS`, `VITE_STEALTH_SEND_ADDRESS`, and `VITE_ANNOUNCEMENT_LOG_ADDRESS` set (match `scripts/deployments.json`)  
 - [ ] **`VITE_STEALTH_CONTRACT_ADDRESS` not set** on Vercel (correct default)  
 - [ ] Phase 2 when ready: `VITE_AGENT_SERVER_URL` + `VITE_X402_SECRET` matching **`AGENT_SERVER_SECRET`** on Railway/backend  
