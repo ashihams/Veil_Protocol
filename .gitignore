@@ -76,3 +76,5 @@ Desktop.ini
 
 # Frontend build artifacts (copied from contract packages during `copy-contract-keys`)
 frontend-vite-react/public/midnight/
+
+midnight-edda-deploy-*/
