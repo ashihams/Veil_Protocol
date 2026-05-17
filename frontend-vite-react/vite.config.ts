@@ -35,7 +35,9 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      // Add any other aliases you need
+      '@eddalabs/stealth-contract/bridge': path.resolve(__dirname, '../stealth-contract/src/bridge/index.ts'),
+      '@eddalabs/stealth-contract/crypto/types': path.resolve(__dirname, '../stealth-contract/src/crypto/types.ts'),
+      '@agent-server/types': path.resolve(__dirname, '../agent-server/src/types.ts'),
     },
   },
   optimizeDeps: {

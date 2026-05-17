@@ -4,7 +4,10 @@
     "paths": {
       "@/*": [
         "./src/*"
-      ]
+      ],
+      "@eddalabs/stealth-contract/bridge": ["../stealth-contract/src/bridge/index.ts"],
+      "@eddalabs/stealth-contract/crypto/types": ["../stealth-contract/src/crypto/types.ts"],
+      "@agent-server/types": ["../agent-server/src/types.ts"]     
     },
     
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",

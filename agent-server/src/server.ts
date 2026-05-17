@@ -16,6 +16,14 @@ export interface ServerOptions {
   payTo: string;
 }
 
+/** Browser demos (Vite on another origin) need CORS + exposed payment headers. */
+const CORS_HEADERS: Record<string, string> = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, X-Payment-Signature",
+  "Access-Control-Expose-Headers": "X-Payment-Required, X-Payment-Response",
+};
+
 function readBody(req: import("node:http").IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
@@ -35,6 +43,7 @@ function send(
   res.writeHead(status, {
     "Content-Type": "application/json",
     "Content-Length": Buffer.byteLength(json),
+    ...CORS_HEADERS,
     ...headers,
   });
   res.end(json);
@@ -44,6 +53,12 @@ export function createServer(opts: ServerOptions): Server {
   const pool = new AgentPool();
 
   const server = httpCreateServer(async (req, res) => {
+    if (req.url === "/task" && req.method === "OPTIONS") {
+      res.writeHead(204, CORS_HEADERS);
+      res.end();
+      return;
+    }
+
     if (req.method !== "POST" || req.url !== "/task") {
       send(res, 404, { error: "not_found" });
       return;
@@ -111,7 +126,7 @@ export function createServer(opts: ServerOptions): Server {
 export function start(opts: ServerOptions): Server {
   const server = createServer(opts);
   server.listen(opts.port, () => {
-    console.log(`agent-server listening on http://localhost:${opts.port}`);
+    console.log(`Phantom Protocol · listening http://localhost:${opts.port}`);
     console.log(`POST /task  — requires X-Payment-Signature header after 402 challenge`);
   });
   return server;

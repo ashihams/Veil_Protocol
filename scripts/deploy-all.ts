@@ -1,5 +1,5 @@
 /**
- * Deploy all EDDA + stealth Compact contracts to Midnight preview (or preprod) in one run.
+ * Deploy all Phantom Protocol (agent + stealth) Compact contracts to Midnight preview (or preprod) in one run.
  * Patterns mirror counter-cli/src/api.ts — same wallet, providers shape, deployContract flow.
  *
  * Run from repo root: npx tsx scripts/deploy-all.ts
@@ -186,7 +186,7 @@ async function main(): Promise<void> {
 
   console.log("");
   console.log("═══════════════════════════════════════════════════");
-  console.log("🚀 Deploying EDDA contracts to Midnight Preview");
+  console.log("🚀 Deploying Phantom Protocol contracts to Midnight Preview");
   console.log("═══════════════════════════════════════════════════");
   console.log(`MIDNIGHT_NETWORK=${networkId}  ·  indexer / proof server below`);
   console.log(`Indexer: ${net.indexer}`);

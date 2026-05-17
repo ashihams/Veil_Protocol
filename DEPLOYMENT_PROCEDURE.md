@@ -1,4 +1,4 @@
-# Deployment Procedure for Vercel
+# Phantom Protocol — Deployment Procedure for Vercel
 
 ## Prerequisites
 

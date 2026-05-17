@@ -30,7 +30,7 @@ const DIV = '──────────────────────�
 
 async function main() {
   console.log(`\n${DIV}`);
-  console.log('  EDDA — ERC-8004 Agent Registry Deploy');
+  console.log('  Phantom Protocol — ERC-8004 Agent Registry Deploy');
   console.log('  Network: Midnight Preview');
   console.log(`${DIV}\n`);
 

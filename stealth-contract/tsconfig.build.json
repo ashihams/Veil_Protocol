@@ -1,5 +1,5 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["src/**/*.test.ts", "src/crypto/test-stealth.ts"],
+  "exclude": ["src/**/*.test.ts", "src/crypto/test-stealth.ts", "src/bridge/test-bridge.ts", "src/test-e2e.ts"],
   "compilerOptions": {}
 }

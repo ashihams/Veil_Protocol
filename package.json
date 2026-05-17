@@ -20,6 +20,7 @@
     "dev:frontend": "cd frontend-vite-react && npm run dev",
     "dev:agent-server": "cd agent-server && npm run dev",
     "deploy-all": "tsx scripts/deploy-all.ts",
+    "demo:phantom": "node scripts/demo-phantom.mjs",
     "deploy:agent-preview": "cd agent-cli && npm run deploy-preview",
     "lint": "turbo run lint"
   },

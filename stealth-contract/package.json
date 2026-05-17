@@ -27,6 +27,11 @@
       "types": "./dist/crypto/stealth.d.ts",
       "import": "./dist/crypto/stealth.js",
       "default": "./dist/crypto/stealth.js"
+    },
+    "./bridge": {
+      "types": "./dist/bridge/index.d.ts",
+      "import": "./dist/bridge/index.js",
+      "default": "./dist/bridge/index.js"
     }
   },
   "scripts": {
@@ -35,6 +40,8 @@
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:crypto-lifecycle": "tsx src/crypto/test-stealth.ts",
+    "test:bridge": "tsx src/bridge/test-bridge.ts",
+    "test:e2e": "tsx src/test-e2e.ts",
     "lint": "eslint src"
   },
   "dependencies": {

@@ -31,8 +31,10 @@ export function Home() {
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-12">
           <div className="text-center md:text-left">
-            <h1 className="text-4xl font-bold text-foreground mb-2">Midnight Starter Template</h1>
-            <p className="text-xl text-muted-foreground">Explore our implementations and features</p>
+            <h1 className="text-4xl font-bold text-foreground mb-2">Phantom Protocol</h1>
+            <p className="text-xl text-muted-foreground">
+              Private agent payments on Midnight — explore the live demos below
+            </p>
           </div>
           <ModeToggle />
         </div>
