@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import http from "node:http";
-import type { Server } from "node:http";
-import { createServer } from "./server.js";
+import type { Server, IncomingMessage } from "node:http";
+import { createServer, getNormalizedPathname } from "./server.js";
 import { buildPaymentPayload } from "./payment-service.js";
 import type { PaymentRequired, TaskResponse, SettlementResponse } from "./types.js";
 
@@ -74,6 +74,19 @@ function options(port: number, path: string, headers?: Record<string, string>): 
     req.end();
   });
 }
+
+function mockReq(url: string | undefined): IncomingMessage {
+  return { url } as IncomingMessage;
+}
+
+describe("route path normalization", () => {
+  it("normalizes /task variants to /task", () => {
+    expect(getNormalizedPathname(mockReq("/task"))).toBe("/task");
+    expect(getNormalizedPathname(mockReq("/task/"))).toBe("/task");
+    expect(getNormalizedPathname(mockReq("//task"))).toBe("/task");
+    expect(getNormalizedPathname(mockReq("/task?foo=1"))).toBe("/task");
+  });
+});
 
 describe("agent-server x402 flow", () => {
   let server: Server;

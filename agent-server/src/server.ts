@@ -17,6 +17,9 @@ export interface ServerOptions {
   payTo: string;
 }
 
+/** Set `AGENT_DEBUG_ROUTES=0` to silence `method url` logs. */
+const LOG_ROUTES = process.env.AGENT_DEBUG_ROUTES !== "0";
+
 /** Default browser origins (Vercel preview + local Vite). Override with CORS_ORIGINS. */
 const DEFAULT_ALLOWED_ORIGINS = [
   "https://veil-protocol-frontend-vite-react-z.vercel.app",
@@ -73,14 +76,29 @@ function buildCorsHeaders(
   return base;
 }
 
-function isTaskPath(req: IncomingMessage): boolean {
-  const u = req.url ?? "/";
+/** Path only: `/task`, `/task?x=1`, `//task//` → `/task` */
+export function getNormalizedPathname(req: IncomingMessage): string {
+  let raw = req.url ?? "/";
+  /** Collapse duplicate leading slashes so `//task` is not parsed as URL-with-authority. */
+  raw = raw.replace(/^\/+/, "/");
+  let path: string;
   try {
-    const p = new URL(u, "http://localhost").pathname;
-    return p === "/task" || p === "/task/";
+    path = new URL(raw, "http://127.0.0.1").pathname;
   } catch {
-    return u === "/task" || u.startsWith("/task?") || u.startsWith("/task/");
+    const q = raw.indexOf("?");
+    path = q >= 0 ? raw.slice(0, q) : raw;
   }
+  const segs = path.split("/").filter(Boolean);
+  if (segs.length === 0) return "/";
+  return "/" + segs.join("/");
+}
+
+function methodIs(req: IncomingMessage, m: string): boolean {
+  return (req.method ?? "").trim().toUpperCase() === m;
+}
+
+function isTaskPath(req: IncomingMessage): boolean {
+  return getNormalizedPathname(req) === "/task";
 }
 
 function readBody(req: IncomingMessage): Promise<string> {
@@ -116,16 +134,20 @@ export function createServer(opts: ServerOptions): Server {
   const allowed = loadCorsAllowedOrigins();
 
   const server = httpCreateServer(async (req, res) => {
+    if (LOG_ROUTES) {
+      console.log(req.method, req.url, JSON.stringify(getNormalizedPathname(req)));
+    }
+
     const origin = req.headers.origin as string | undefined;
     const cors = buildCorsHeaders(origin, allowed);
 
-    if (req.method === "OPTIONS" && isTaskPath(req)) {
+    if (methodIs(req, "OPTIONS") && isTaskPath(req)) {
       res.writeHead(204, cors);
       res.end();
       return;
     }
 
-    if (req.method !== "POST" || !isTaskPath(req)) {
+    if (!methodIs(req, "POST") || !isTaskPath(req)) {
       send(req, res, allowed, 404, { error: "not_found" });
       return;
     }
@@ -191,12 +213,13 @@ export function createServer(opts: ServerOptions): Server {
 
 export function start(opts: ServerOptions): Server {
   const server = createServer(opts);
-  server.listen(opts.port, () => {
+  const host = process.env.LISTEN_HOST ?? "0.0.0.0";
+  server.listen(opts.port, host, () => {
     const mode =
       process.env.CORS_ORIGINS?.trim() === "*"
         ? "CORS *"
         : `CORS origins: ${process.env.CORS_ORIGINS?.trim() || "default (Vercel + localhost)"}`;
-    console.log(`Veil Protocol · listening http://localhost:${opts.port} (${mode})`);
+    console.log(`Veil Protocol · listening http://${host}:${opts.port} (${mode})`);
     console.log(`POST /task  — requires X-Payment-Signature header after 402 challenge`);
   });
   return server;

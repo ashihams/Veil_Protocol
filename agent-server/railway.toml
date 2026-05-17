@@ -1,0 +1,6 @@
+# Railway: set the service **Root Directory** to `agent-server` in the Railway dashboard
+# so this file is used and commands run from `agent-server/`.
+# https://docs.railway.com/guides/monorepo
+
+[deploy]
+startCommand = "node dist/bin.js"
