@@ -22,6 +22,7 @@ const LOG_ROUTES = process.env.AGENT_DEBUG_ROUTES !== "0";
 
 /** Default browser origins (Vercel preview + local Vite). Override with CORS_ORIGINS. */
 const DEFAULT_ALLOWED_ORIGINS = [
+  "https://veil-stealth-protocol.vercel.app",
   "https://veil-protocol-frontend-vite-react-z.vercel.app",
   "http://localhost:5173",
   "http://127.0.0.1:5173",
