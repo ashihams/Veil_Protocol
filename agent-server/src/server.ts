@@ -29,20 +29,18 @@ const DEFAULT_ALLOWED_ORIGINS = [
 ];
 
 /**
- * `CORS_ORIGINS=*` → allow any origin (no credentials).
- * Else comma-separated origins, or unset → DEFAULT_ALLOWED_ORIGINS.
+ * Unset or `CORS_ORIGINS=*` → `Access-Control-Allow-Origin: *` (any frontend; no credentials).
+ * Else comma-separated origins → reflect matching Origin + credentials.
  */
 function loadCorsAllowedOrigins(): Set<string> | null {
   const raw = process.env.CORS_ORIGINS?.trim();
-  if (raw === "*") return null;
-  if (raw)
-    return new Set(
-      raw
-        .split(",")
-        .map((s) => s.trim().replace(/\/$/, ""))
-        .filter(Boolean),
-    );
-  return new Set(DEFAULT_ALLOWED_ORIGINS.map((o) => o.replace(/\/$/, "")));
+  if (!raw || raw === "*") return null;
+  return new Set(
+    raw
+      .split(",")
+      .map((s) => s.trim().replace(/\/$/, ""))
+      .filter(Boolean),
+  );
 }
 
 function buildCorsHeaders(
@@ -216,10 +214,11 @@ export function start(opts: ServerOptions): Server {
   const server = createServer(opts);
   const host = process.env.LISTEN_HOST ?? "0.0.0.0";
   server.listen(opts.port, host, () => {
+    const corsEnv = process.env.CORS_ORIGINS?.trim();
     const mode =
-      process.env.CORS_ORIGINS?.trim() === "*"
-        ? "CORS *"
-        : `CORS origins: ${process.env.CORS_ORIGINS?.trim() || "default (Vercel + localhost)"}`;
+      !corsEnv || corsEnv === "*"
+        ? "CORS * (open)"
+        : `CORS origins: ${corsEnv}`;
     console.log(`Veil Protocol · listening http://${host}:${opts.port} (${mode})`);
     console.log(`POST /task  — requires X-Payment-Signature header after 402 challenge`);
   });

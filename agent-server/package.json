@@ -22,8 +22,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@eddalabs/stealth-contract": "*",
-    "@noble/hashes": "^1.7.1"
+    "@noble/hashes": "^1.7.1",
+    "ethers": "^6.13.5"
   },
   "devDependencies": {
     "@types/node": "^22.15.29",

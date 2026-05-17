@@ -2,8 +2,8 @@ import { randomUUID, randomBytes } from "node:crypto";
 import {
   generatePaymentProof,
   verifyPaymentProof,
-} from "@eddalabs/stealth-contract";
-import type { PaymentProofPayload } from "@eddalabs/stealth-contract";
+  type PaymentProofPayload,
+} from "./stealth-types.js";
 import type {
   TaskRequest,
   PaymentRequired,
