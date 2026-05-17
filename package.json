@@ -18,7 +18,8 @@
     "setup-standalone": "cd counter-cli && npm run setup-undeployed",
     "dev:frontend": "cd frontend-vite-react && npm run dev",
     "dev:agent-server": "cd agent-server && npm run dev",
-    "lint": "turbo run lint"
+    "lint": "turbo run lint",
+    "deploy-all": "tsx scripts/deploy-all.ts"
   },
   "engines": {
     "node": ">=18"
@@ -36,6 +37,7 @@
     "eslint-plugin-prettier": "^5.4.1",
     "testcontainers": "^11.0.0",
     "ts-node": "^10.9.2",
+    "tsx": "^4.19.4",
     "turbo": "^2.4.4",
     "typescript": "^5.8.3",
     "vitest": "^3.2.0"

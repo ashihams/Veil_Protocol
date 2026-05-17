@@ -1,0 +1,13 @@
+{
+  "network": "preview",
+  "deployedAt": "2026-05-16T22:29:37.728Z",
+  "proofServer": "https://proof-server.preview.midnight.network",
+  "contracts": {
+    "identityRegistry": "54ab9b44610e7353f1af0900d45853ded55bbfd0604a4d5cf3b78875f050951d",
+    "reputationRegistry": "38d5c44a9735fa2997bea9cbae5c910aa3be293839c96c09c65c291e668aa23e",
+    "validationRegistry": "a7ef1e39753d89e7031831d4779a08aee3b3974eea67feba052c03ccdf762d4c",
+    "stealthKeyRegistry": "05fdff7371c9f498f2b3a3953606b1c3f6d8dfbddefd0948c25134a52efb6fd4",
+    "stealthSend": "eb2c89ce96c09b5ebe5164d430675991185a8b8ee79df0449df476f485f8528b",
+    "announcementLog": "a10237a50fc0e285601189ca3e8ac163da91e0d98642ff823a6012d1ea0e67bf"
+  }
+}
