@@ -50,6 +50,31 @@ function post(
   });
 }
 
+function options(port: number, path: string, headers?: Record<string, string>): Promise<{
+  status: number;
+  headers: http.IncomingHttpHeaders;
+}> {
+  return new Promise((resolve, reject) => {
+    const req = http.request(
+      {
+        hostname: "127.0.0.1",
+        port,
+        path,
+        method: "OPTIONS",
+        headers: { Connection: "close", ...headers },
+      },
+      (res) => {
+        res.resume();
+        res.on("end", () => {
+          resolve({ status: res.statusCode ?? 0, headers: res.headers });
+        });
+      },
+    );
+    req.on("error", reject);
+    req.end();
+  });
+}
+
 describe("agent-server x402 flow", () => {
   let server: Server;
   let port: number;
@@ -63,6 +88,19 @@ describe("agent-server x402 flow", () => {
     server.closeAllConnections?.();
     server.close(() => resolve());
   }));
+
+  it("OPTIONS /task preflight with Vercel-like Origin returns 204 + CORS headers", async () => {
+    const { status, headers } = await options(port, "/task", {
+      Origin: "https://veil-protocol-frontend-vite-react-z.vercel.app",
+      "Access-Control-Request-Method": "POST",
+      "Access-Control-Request-Headers": "content-type,x-payment-signature",
+    });
+    expect(status).toBe(204);
+    expect(headers["access-control-allow-origin"]).toBe(
+      "https://veil-protocol-frontend-vite-react-z.vercel.app",
+    );
+    expect(headers["access-control-allow-credentials"]).toBe("true");
+  });
 
   it("no payment header → 402 + X-Payment-Required header", async () => {
     const { status, headers } = await post(port, { op: "add", a: 2, b: 3 });
