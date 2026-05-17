@@ -6,5 +6,5 @@ const sharedSecret = new TextEncoder().encode(secretStr);
 const payTo = process.env.AGENT_SERVER_PAY_TO ?? "0x0000000000000000000000000000000000000001";
 const port = Number(process.env.PORT ?? 3402);
 
-console.log("Phantom Protocol — x402 agent-server (POST /task)");
+console.log("Veil Protocol — x402 agent-server (POST /task)");
 start({ port, sharedSecret, payTo });

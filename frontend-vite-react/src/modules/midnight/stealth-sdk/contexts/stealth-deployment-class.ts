@@ -2,7 +2,7 @@ import { type StealthProviders, StealthPrivateStateId } from '../api/stealth-com
 import { type ContractAddress } from '@midnight-ntwrk/compact-runtime';
 import { BehaviorSubject } from 'rxjs';
 import { type Logger } from 'pino';
-import { type LocalStorageProps } from '../../counter-sdk/contexts/counter-localStorage-class';
+import type { StealthLocalStorageProps } from './stealth-local-storage';
 import {
   StealthContractController,
   StealthContractControllerInterface,
@@ -43,7 +43,7 @@ export interface StealthDeployedAPIProvider {
 export class StealthDeployedTemplateManager implements StealthDeployedAPIProvider {
   constructor(
     private readonly logger: Logger,
-    private readonly localState: LocalStorageProps,
+    private readonly localState: StealthLocalStorageProps,
     private readonly contractAddress: ContractAddress,
     private readonly providers?: StealthProviders,
   ) {}

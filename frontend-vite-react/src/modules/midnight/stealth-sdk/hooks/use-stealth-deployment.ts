@@ -1,8 +1,8 @@
 import { useContext } from 'react';
 import {
   StealthDeployedProviderContext,
-  type StealthDeployedAPIProvider,
 } from '../contexts/stealth-deployment';
+import type { StealthDeployedAPIProvider } from '../contexts/stealth-deployment-class';
 
 export const useStealthDeployedContracts = (): StealthDeployedAPIProvider => {
   const context = useContext(StealthDeployedProviderContext);

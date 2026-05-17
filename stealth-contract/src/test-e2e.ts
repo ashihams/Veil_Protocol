@@ -159,7 +159,7 @@ async function main(): Promise<void> {
   console.log(`⏱️  Total: ${elapsed}ms`);
   console.log("");
   console.log("═══════════════════════════════════════════════");
-  console.log("🎉 Phantom Protocol — STEALTH × x402 PAYMENT OK");
+  console.log("🎉 Veil Protocol — STEALTH × x402 PAYMENT OK");
   console.log("═══════════════════════════════════════════════");
 }
 

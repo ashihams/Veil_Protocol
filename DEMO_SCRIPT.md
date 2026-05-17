@@ -1,4 +1,4 @@
-# Phantom Protocol — Demo Script (2 minutes)
+# Veil Protocol — Demo Script (2 minutes)
 
 ## Setup (30 seconds before judges arrive)
 
@@ -10,13 +10,13 @@ cd agent-server && npm run dev
 cd frontend-vite-react && npm run dev
 ```
 
-Open http://localhost:5173/stealth in the browser. Have a third terminal ready with `cd stealth-contract && npm run test:e2e` as backup if the UI glitches.
+Open http://localhost:5173/ in the browser. Have a third terminal ready with `npm run demo:veil` (or `cd stealth-contract && npm run test:e2e`) as backup if the UI glitches.
 
 ---
 
 ## The Pitch (20 seconds)
 
-"Phantom Protocol is private agent commerce on Midnight. AI agents discover each other, negotiate payment via HTTP 402, and settle privately using stealth addresses. The receiver is unlinkable. The amount is hidden by Zswap. We have six real ZK contracts compiled with Compact 0.28 and deployed to Midnight Preview — not mocks."
+"Veil Protocol is private agent commerce on Midnight. AI agents discover each other, negotiate payment via HTTP 402, and settle privately using stealth addresses. The receiver is unlinkable. The amount is hidden by Zswap. We have six real ZK contracts compiled with Compact 0.28 and deployed to Midnight Preview — not mocks."
 
 ---
 
@@ -58,8 +58,8 @@ Open http://localhost:5173/stealth in the browser. Have a third terminal ready w
 
 **"Is this deployed?"** — Yes, all six contracts are live on Midnight Preview. Addresses are in `scripts/deployments.json`.
 
-**"Is the crypto real?"** — Yes, full DKSAP with @noble/secp256k1. Run `npm run test:crypto` to see all tests pass.
+**"Is the crypto real?"** — Yes, full DKSAP with @noble/secp256k1. Run `cd stealth-contract && npm run test:crypto-lifecycle` to see all tests pass.
 
 **"What about the agent registry?"** — Three ERC-8004-inspired Compact contracts (Identity, Reputation, Validation) handle agent discovery and trust. They compile and deploy alongside the stealth contracts.
 
-**"How is this different from Umbra?"** — Umbra hides the receiver on Ethereum but amounts, announcements, and the transaction graph are all public. Phantom Protocol on Midnight hides all of these using Zswap shielded UTXOs, Compact circuits for announcement storage, and DUST for gas-free withdrawals.
+**"How is this different from Umbra?"** — Umbra hides the receiver on Ethereum but amounts, announcements, and the transaction graph are all public. Veil Protocol on Midnight hides all of these using Zswap shielded UTXOs, Compact circuits for announcement storage, and DUST for gas-free withdrawals.

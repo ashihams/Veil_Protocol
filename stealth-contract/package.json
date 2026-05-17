@@ -4,7 +4,7 @@
   "license": "Apache-2.0",
   "private": true,
   "type": "module",
-  "description": "DKSAP stealth crypto + Midnight Compact module (template parity with counter-contract)",
+  "description": "DKSAP stealth crypto + Midnight Compact modules for Veil Protocol",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {

@@ -126,7 +126,7 @@ export function createServer(opts: ServerOptions): Server {
 export function start(opts: ServerOptions): Server {
   const server = createServer(opts);
   server.listen(opts.port, () => {
-    console.log(`Phantom Protocol · listening http://localhost:${opts.port}`);
+    console.log(`Veil Protocol · listening http://localhost:${opts.port}`);
     console.log(`POST /task  — requires X-Payment-Signature header after 402 challenge`);
   });
   return server;

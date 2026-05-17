@@ -1,5 +1,5 @@
 /**
- * Cross-platform copy of managed zk artifacts into public/ (no mkdir -p / cp).
+ * Cross-platform copy of managed zk artifacts into public/ (stealth only).
  */
 import { cp, mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -9,8 +9,6 @@ const feRoot = dirname(fileURLToPath(new URL("../package.json", import.meta.url)
 const repoRoot = join(feRoot, "..");
 
 const pairs = [
-  [join(repoRoot, "counter-contract/src/managed/counter/keys"), join(feRoot, "public/midnight/counter/keys")],
-  [join(repoRoot, "counter-contract/src/managed/counter/zkir"), join(feRoot, "public/midnight/counter/zkir")],
   [join(repoRoot, "stealth-contract/src/managed/stealth/keys"), join(feRoot, "public/midnight/stealth/keys")],
   [join(repoRoot, "stealth-contract/src/managed/stealth/zkir"), join(feRoot, "public/midnight/stealth/zkir")],
 ];

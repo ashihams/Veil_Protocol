@@ -1,208 +1,101 @@
-# Phantom Protocol — Deployment Procedure for Vercel
+# Veil Protocol — Deployment Procedure for Vercel
 
 ## Prerequisites
 
 - GitHub repository connected to Vercel
-- Midnight contract deployed and contract address available
+- Stealth / agent contracts deployed and addresses available for the frontend
 - Vercel account with project created
 
 ## One-Time Setup in Vercel
 
 ### 1. Enable Git LFS (CRITICAL)
-This project uses Git LFS for contract keys. You MUST enable this:
+
+This project uses Git LFS for Compact ZK artifacts under `stealth-contract/src/managed/`. Enable LFS on Vercel:
 
 1. Go to **[Vercel Dashboard](https://vercel.com/dashboard)**
 2. Select your project
 3. Go to **Settings → Git**
-4. Find **"Git LFS"** option
+4. Find **"Git LFS"**
 5. **Toggle it ON**
 6. Click **Save**
 
 ### 2. Configure Environment Variables
 
-Go to **Settings → Environment Variables** and add:
+Go to **Settings → Environment Variables** and add (Production, Preview, Development as needed):
 
-| Variable | Value | Environment |
-|----------|-------|-------------|
-| `VITE_CONTRACT_ADDRESS` | Your deployed contract address | Production, Preview, Development |
+| Variable | Purpose |
+|----------|---------|
+| `VITE_STEALTH_CONTRACT_ADDRESS` | Deployed stealth “main” contract address the UI binds to (see `frontend-vite-react/src/routes/__root.tsx`) |
+| `VITE_MIDNIGHT_INDEXER_HTTP` | Optional override; defaults to Preview GraphQL indexer |
+| `VITE_MIDNIGHT_INDEXER_WS` | Optional WebSocket indexer URL |
+| `VITE_MIDNIGHT_PROVER_URL` | Optional HTTP proof server URL for client-side proving |
+| `VITE_AGENT_SERVER_URL` | x402 demo server base URL if not using default `http://localhost:3402` (production API) |
+| `VITE_X402_SECRET` | Shared HMAC secret if it must match a deployed agent-server |
 
 ### 3. Verify Build Settings
 
-Go to **Settings → General → Build & Development Settings**
+**Settings → General → Build & Development Settings** should match `vercel.json`:
 
-Should show (from `vercel.json`):
-- **Framework Preset**: Vite
-- **Build Command**: `npm run build-production`
-- **Output Directory**: `frontend-vite-react/dist`
-- **Install Command**: `npm install`
+- **Framework Preset**: Vite  
+- **Build Command**: `npm run build-production`  
+- **Output Directory**: `frontend-vite-react/dist`  
+- **Install Command**: `npm install`  
 
-If these are incorrect, either:
-- Delete and re-import the project (to pick up `vercel.json`)
-- Or manually set these values
+If values are wrong, re-import the project or set them manually.
 
-## Deployment Steps
+## What `build-production` Does
 
-### Every Deployment
+From the repo root:
 
-1. **Ensure contract keys are up to date**
-   ```bash
-   # Regenerate contract keys if needed
-   cd counter-contract
-   npm run compact
-   npm run build
-   ```
+1. `git lfs pull` — fetch binary ZK artifacts  
+2. `cd stealth-contract && npm run build` — compile/package stealth contracts if your pipeline requires it  
+3. `cd ../frontend-vite-react && npm run build` — runs `copy-contract-keys` then `vite build`  
 
-2. **Commit and push changes**
-   ```bash
-   git add .
-   git commit -m "Your commit message"
-   git push
-   ```
-
-3. **Vercel automatically deploys** from main branch
-
-### Manual Deployment (if needed)
-
-1. Go to **Vercel Dashboard → Deployments**
-2. Click **"..."** on the latest deployment
-3. Click **"Redeploy"**
-4. Uncheck "Use existing Build Cache"
-5. Click **Redeploy**
+`copy-contract-keys` copies `stealth-contract/src/managed/stealth/keys` and `.../zkir` into `frontend-vite-react/public/midnight/stealth/` so the browser can load verifiers at `/midnight/stealth/...`.
 
 ## Post-Deployment Verification
 
-### 1. Check Build Logs
+### Build logs
 
-1. Go to latest deployment
-2. Click **"Building"** tab
-3. Verify you see:
-   ```bash
-   > npm run build-production
-   > cd counter-contract && npm run build
-   > cd ../frontend-vite-react && npm run build
-   > copy-contract-keys
-   ```
+You should see `stealth-contract` build (if applicable), then `copy-contract-keys`, then Vite production build.
 
-### 2. Verify Contract Keys are Accessible
+### Static ZK assets
 
-Visit these URLs (replace with your domain):
+After deploy, a stealth verifier URL should return **200** with binary content (not Git LFS pointer text), for example:
 
-```
-https://your-app.vercel.app/midnight/counter/keys/increment.verifier
-```
+`https://your-app.vercel.app/midnight/stealth/keys/increment.verifier`
 
-Should:
-- Return **200 OK**
-- Download a file of **1,291 bytes**
-- NOT show 404 or Git LFS pointer text
+Byte size depends on your Compact outputs; the important check is **not 404** and **not an LFS pointer**.
 
-### 3. Test the Application
+### Application
 
-1. Open your deployed app
-2. Connect wallet
-3. Navigate to Counter page
-4. Try incrementing the counter
-5. Should work without "mismatched verifier keys" error
+1. Open the deployed origin at `/` — the stealth × x402 demo is the only screen.  
+2. Confirm `VITE_STEALTH_CONTRACT_ADDRESS` matches your deployment if the UI shows deployment errors.
 
-## Common Issues & Quick Fixes
+## Common Issues
 
-### Issue: "mismatched verifier keys" error
+### Git LFS pointer text in the browser
 
-**Cause**: Git LFS not enabled or LFS files not pulled
+**Cause**: LFS not enabled on Vercel or objects not pulled. **Fix**: enable LFS in project settings, redeploy without cache.
 
-**Fix**:
-1. Enable Git LFS in Vercel (Settings → Git)
-2. Redeploy without cache
+### “Mismatched verifier” / failing proofs in the UI
 
-### Issue: 404 on contract key files
+**Cause**: Stale or missing keys in `public/midnight/stealth`. **Fix**: run a fresh `stealth-contract` build locally, commit updated `src/managed`, ensure `build-production` runs before `vite build`.
 
-**Cause**: Build command not using `build-production`
+### Wrong network / indexer
 
-**Fix**:
-1. Check Build Settings (step 3 above)
-2. Ensure `npm run build-production` is the build command
-3. Redeploy
+**Cause**: Preview vs preprod mismatch. **Fix**: set `VITE_MIDNIGHT_INDEXER_*` (and contract addresses) to the network you deployed to.
 
-### Issue: Files show Git LFS pointer text instead of binary
+## Checklist — First Deploy
 
-**Cause**: Git LFS not enabled in Vercel
+- [ ] Git LFS enabled for the Vercel project  
+- [ ] `VITE_STEALTH_CONTRACT_ADDRESS` set to the deployed contract  
+- [ ] Optional indexer/prover overrides if not on default Preview  
+- [ ] Build command `npm run build-production`, output `frontend-vite-react/dist`  
+- [ ] Managed artifacts committed (or generated in CI before frontend build)  
 
-**Fix**:
-1. Enable Git LFS toggle in Settings → Git
-2. Must redeploy after enabling
+## Checklist — Every Deploy
 
-## Build Process Flow
-
-For reference, here's what happens during build:
-
-```
-1. Vercel clones repo with Git LFS enabled
-   → Downloads actual binary files (not pointers)
-
-2. npm install
-   → Installs all dependencies
-
-3. npm run build-production
-
-   3a. cd counter-contract && npm run build
-       → Compiles contract
-       → Generates/copies keys to counter-contract/dist/managed/
-
-   3b. cd ../frontend-vite-react && npm run build
-
-       3b.1. npm run copy-contract-keys
-             → Copies keys from counter-contract/src/managed/
-             → To frontend-vite-react/public/midnight/counter/
-
-       3b.2. vite build
-             → Bundles frontend
-             → Copies public/ to dist/
-             → Output: frontend-vite-react/dist/
-
-4. Vercel deploys frontend-vite-react/dist/
-```
-
-## File Structure After Build
-
-```
-frontend-vite-react/dist/
-├── index.html
-├── assets/
-│   ├── index-*.js
-│   ├── App-*.js
-│   └── ...
-└── midnight/
-    └── counter/
-        ├── keys/
-        │   ├── increment.prover      (278,053 bytes)
-        │   └── increment.verifier    (1,291 bytes)
-        └── zkir/
-            ├── increment.zkir        (784 bytes)
-            └── increment.bzkir       (64 bytes)
-```
-
-## Emergency Rollback
-
-If a deployment fails:
-
-1. Go to **Deployments**
-2. Find last working deployment
-3. Click **"..."** → **"Promote to Production"**
-
-## Checklist Before First Deployment
-
-- [ ] Git LFS enabled in Vercel Settings → Git
-- [ ] Environment variable `VITE_CONTRACT_ADDRESS` set
-- [ ] Build command is `npm run build-production`
-- [ ] Output directory is `frontend-vite-react/dist`
-- [ ] Contract keys committed to repository
-- [ ] All changes pushed to main branch
-
-## Checklist For Every Deployment
-
-- [ ] Contract keys are up to date (if contract changed)
-- [ ] Environment variables are correct
-- [ ] Changes committed and pushed
-- [ ] Build logs show successful compilation
-- [ ] Contract key files are accessible (not 404)
-- [ ] Application works without errors
+- [ ] Contract or ZK artifacts updated → rebuild `stealth-contract` and copy keys  
+- [ ] Env vars updated if addresses or network changed  
+- [ ] Redeploy without cache if LFS or asset issues appear  

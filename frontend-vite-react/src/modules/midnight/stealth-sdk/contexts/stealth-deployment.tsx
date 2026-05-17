@@ -2,7 +2,7 @@ import type { PropsWithChildren } from 'react';
 import { createContext, useMemo } from 'react';
 import type { Logger } from 'pino';
 import type { StealthDeployedAPIProvider } from './stealth-deployment-class';
-import { useLocalState } from '../../counter-sdk/hooks/use-localStorage';
+import { useStealthLocalState } from '../hooks/use-stealth-local-state';
 import { StealthDeployedTemplateManager } from './stealth-deployment-class';
 import { ContractAddress } from '@midnight-ntwrk/compact-runtime';
 import { useStealthProviders } from '../hooks/use-stealth-providers';
@@ -21,7 +21,7 @@ export const StealthDeployedProvider = ({
   contractAddress,
   children,
 }: StealthDeployedProviderProps) => {
-  const localState = useLocalState();
+  const localState = useStealthLocalState();
   const providers = useStealthProviders();
   const manager = useMemo(() => {
     return new StealthDeployedTemplateManager(

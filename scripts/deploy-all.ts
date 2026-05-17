@@ -1,6 +1,6 @@
 /**
- * Deploy all Phantom Protocol (agent + stealth) Compact contracts to Midnight preview (or preprod) in one run.
- * Patterns mirror counter-cli/src/api.ts — same wallet, providers shape, deployContract flow.
+ * Deploy all Veil Protocol (agent + stealth) Compact contracts to Midnight preview (or preprod) in one run.
+ * Uses midnight-js wallet + `deployContract` flow.
  *
  * Run from repo root: npx tsx scripts/deploy-all.ts
  * Config: copy scripts/.env.template → scripts/.env
@@ -19,7 +19,7 @@ import { NodeZkConfigProvider } from "@midnight-ntwrk/midnight-js-node-zk-config
 import dotenv from "dotenv";
 import pino from "pino";
 
-import type { Config } from "../counter-cli/src/config.js";
+import type { Config } from "./midnight-config.js";
 import * as wallet from "./midnight-wallet.js";
 import { createPrivateState } from "../agent-contract/src/witnesses.js";
 import * as Identity from "../agent-contract/src/managed/identity/contract/index.js";
@@ -44,7 +44,7 @@ type DeployableContract = {
     | "stealthKeyRegistry"
     | "stealthSend"
     | "announcementLog";
-  /** Compact `Contract` class from managed output (mirrors counter-cli `CompiledContract.make`). */
+  /** Compact `Contract` class from `compact compile` managed output. */
   Contract: any;
   zkDir: string;
   privateStateId: string;
@@ -146,7 +146,7 @@ function padLabel(label: string, width: number): string {
   return label.length >= width ? label : label + " ".repeat(width - label.length);
 }
 
-/** Same structure as counter-cli `configureProviders`, but per-contract ZK dir + LevelDB namespace. */
+/** Configure midnight-js providers for one contract (ZK dir + LevelDB namespace). */
 async function configureProvidersForContract(
   walletContext: wallet.WalletContext,
   net: Config,
@@ -186,7 +186,7 @@ async function main(): Promise<void> {
 
   console.log("");
   console.log("═══════════════════════════════════════════════════");
-  console.log("🚀 Deploying Phantom Protocol contracts to Midnight Preview");
+  console.log("🚀 Deploying Veil Protocol contracts to Midnight");
   console.log("═══════════════════════════════════════════════════");
   console.log(`MIDNIGHT_NETWORK=${networkId}  ·  indexer / proof server below`);
   console.log(`Indexer: ${net.indexer}`);

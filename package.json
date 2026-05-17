@@ -4,8 +4,6 @@
   "private": true,
   "type": "module",
   "workspaces": [
-    "counter-cli",
-    "counter-contract",
     "frontend-vite-react",
     "stealth-contract",
     "agent-contract",
@@ -15,12 +13,11 @@
   "scripts": {
     "compact": "turbo run compact",
     "build": "turbo run build",
-    "build-production": "git lfs pull && cd counter-contract && npm run build && cd ../frontend-vite-react && npm run build",
-    "setup-standalone": "cd counter-cli && npm run setup-undeployed",
+    "build-production": "git lfs pull && cd stealth-contract && npm run build && cd ../frontend-vite-react && npm run build",
     "dev:frontend": "cd frontend-vite-react && npm run dev",
     "dev:agent-server": "cd agent-server && npm run dev",
     "deploy-all": "tsx scripts/deploy-all.ts",
-    "demo:phantom": "node scripts/demo-phantom.mjs",
+    "demo:veil": "node scripts/demo-veil.mjs",
     "deploy:agent-preview": "cd agent-cli && npm run deploy-preview",
     "lint": "turbo run lint"
   },

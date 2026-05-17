@@ -13,17 +13,23 @@ import { indexerPublicDataProvider } from '@midnight-ntwrk/midnight-js-indexer-p
 import { Logger } from 'pino';
 import type { StealthCircuits } from '../api/stealth-common-types';
 import { StealthPrivateStateId, StealthProviders } from '../api/stealth-common-types';
-import { useWallet } from '../../wallet-widget/hooks/useWallet';
+import { StealthPrivateState } from '@eddalabs/stealth-contract';
 import {
   ActionMessages,
   ProviderAction,
   WrappedPublicDataProvider,
-} from '../../wallet-widget/utils/providersWrappers/publicDataProvider';
-import { CachedFetchZkConfigProvider } from '../../wallet-widget/utils/providersWrappers/zkConfigProvider';
-import { noopProofClient, proofClient } from '../../wallet-widget/utils/providersWrappers/proofClient';
-import { inMemoryPrivateStateProvider } from '../../wallet-widget/utils/customImplementations/in-memory-private-state-provider';
-import { StealthPrivateState } from '@eddalabs/stealth-contract';
-import { fromHex, toHex } from '@midnight-ntwrk/compact-runtime';
+} from '../utils/wrapped-public-data-provider';
+import { CachedFetchZkConfigProvider } from '../utils/cached-zk-config-provider';
+import { noopProofClient, proofClient } from '../utils/proof-client';
+import { inMemoryPrivateStateProvider } from '../utils/in-memory-private-state-provider';
+
+/** Default Preview indexer (override with VITE_MIDNIGHT_INDEXER_*). */
+const DEFAULT_INDEXER_HTTP =
+  import.meta.env.VITE_MIDNIGHT_INDEXER_HTTP ?? 'https://indexer.preview.midnight.network/api/v3/graphql';
+const DEFAULT_INDEXER_WS =
+  import.meta.env.VITE_MIDNIGHT_INDEXER_WS ??
+  'wss://indexer.preview.midnight.network/api/v3/graphql/ws';
+const PROVER_URL = import.meta.env.VITE_MIDNIGHT_PROVER_URL ?? '';
 
 export interface StealthProvidersState {
   privateStateProvider: PrivateStateProvider<typeof StealthPrivateStateId>;
@@ -46,7 +52,7 @@ export const StealthProvidersContext = createContext<StealthProvidersState | und
 const ACTION_MESSAGES: Readonly<ActionMessages> = {
   proveTxStarted: 'Proving transaction...',
   proveTxDone: undefined,
-  balanceTxStarted: 'Signing the transaction with Midnight Lace wallet...',
+  balanceTxStarted: 'Wallet not connected (read-only providers).',
   balanceTxDone: undefined,
   downloadProverStarted: 'Downloading prover key...',
   downloadProverDone: undefined,
@@ -54,11 +60,14 @@ const ACTION_MESSAGES: Readonly<ActionMessages> = {
   submitTxDone: undefined,
   watchForTxDataStarted: 'Waiting for transaction finalization on blockchain...',
   watchForTxDataDone: undefined,
-} as const;
+};
 
+/**
+ * Midnight indexer + ZK fetch for stealth Compact demos — no browser wallet / Lace UI.
+ * Connect a wallet later by extending this provider if needed.
+ */
 export const StealthProvidersWrapper = ({ children, logger }: StealthProviderProps) => {
   const [flowMessage, setFlowMessage] = useState<string | undefined>(undefined);
-  const { serviceUriConfig, shieldedAddresses, connectedAPI, status } = useWallet();
 
   const providerCallback = useCallback((action: ProviderAction): void => {
     setFlowMessage(ACTION_MESSAGES[action]);
@@ -66,19 +75,17 @@ export const StealthProvidersWrapper = ({ children, logger }: StealthProviderPro
 
   const privateStateProvider: PrivateStateProvider<typeof StealthPrivateStateId> = useMemo(
     () => inMemoryPrivateStateProvider<string, StealthPrivateState>(),
-    [status],
+    [],
   );
 
   const publicDataProvider: PublicDataProvider | undefined = useMemo(
     () =>
-      serviceUriConfig
-        ? new WrappedPublicDataProvider(
-            indexerPublicDataProvider(serviceUriConfig.indexerUri, serviceUriConfig.indexerWsUri),
-            providerCallback,
-            logger,
-          )
-        : undefined,
-    [serviceUriConfig, providerCallback, logger, status],
+      new WrappedPublicDataProvider(
+        indexerPublicDataProvider(DEFAULT_INDEXER_HTTP, DEFAULT_INDEXER_WS),
+        providerCallback,
+        logger,
+      ),
+    [providerCallback, logger],
   );
 
   const zkConfigProvider = useMemo(() => {
@@ -90,68 +97,34 @@ export const StealthProvidersWrapper = ({ children, logger }: StealthProviderPro
       fetch.bind(window),
       () => {},
     );
-  }, [status]);
+  }, []);
 
   const proofProvider = useMemo(
     () =>
-      serviceUriConfig?.proverServerUri && zkConfigProvider
-        ? proofClient(serviceUriConfig.proverServerUri, zkConfigProvider, providerCallback)
+      PROVER_URL.trim() && zkConfigProvider
+        ? proofClient(PROVER_URL.trim(), zkConfigProvider, providerCallback)
         : noopProofClient(),
-    [serviceUriConfig, zkConfigProvider, providerCallback, status],
+    [zkConfigProvider, providerCallback],
   );
 
   const walletProvider: WalletProvider = useMemo(
-    () =>
-      connectedAPI
-        ? {
-            getCoinPublicKey(): ledger.CoinPublicKey {
-              return shieldedAddresses?.shieldedCoinPublicKey as unknown as ledger.CoinPublicKey;
-            },
-            getEncryptionPublicKey(): ledger.EncPublicKey {
-              return shieldedAddresses?.shieldedEncryptionPublicKey as unknown as ledger.EncPublicKey;
-            },
-            async balanceTx(tx: UnboundTransaction, _ttl?: Date): Promise<ledger.FinalizedTransaction> {
-              try {
-                const serializedTx = toHex(tx.serialize());
-                const received = await connectedAPI.balanceUnsealedTransaction(serializedTx);
-                return ledger.Transaction.deserialize<ledger.SignatureEnabled, ledger.Proof, ledger.Binding>(
-                  'signature',
-                  'proof',
-                  'binding',
-                  fromHex(received.tx),
-                );
-              } catch (e) {
-                logger.error({ error: e }, 'Error balancing transaction via wallet');
-                throw e;
-              }
-            },
-          }
-        : {
-            getCoinPublicKey(): ledger.CoinPublicKey {
-              return '';
-            },
-            getEncryptionPublicKey(): ledger.EncPublicKey {
-              return '';
-            },
-            balanceTx: () => Promise.reject(new Error('readonly')),
-          },
-    [connectedAPI, logger, shieldedAddresses],
+    () => ({
+      getCoinPublicKey(): ledger.CoinPublicKey {
+        return '';
+      },
+      getEncryptionPublicKey(): ledger.EncPublicKey {
+        return '';
+      },
+      balanceTx: () => Promise.reject(new Error('No wallet — use Veil Protocol x402 + local crypto demo, or add Lace here.')),
+    }),
+    [],
   );
 
   const midnightProvider: MidnightProvider = useMemo(
-    () =>
-      connectedAPI
-        ? {
-            submitTx: async (tx: ledger.FinalizedTransaction): Promise<ledger.TransactionId> => {
-              await connectedAPI.submitTransaction(toHex(tx.serialize()));
-              const txIdentifiers = tx.identifiers();
-              return txIdentifiers[0];
-            },
-          }
-        : {
-            submitTx: (): Promise<ledger.TransactionId> => Promise.reject(new Error('readonly')),
-          },
-    [connectedAPI],
+    () => ({
+      submitTx: (): Promise<ledger.TransactionId> => Promise.reject(new Error('No wallet')),
+    }),
+    [],
   );
 
   const combinedProviders: StealthProvidersState = useMemo(() => {

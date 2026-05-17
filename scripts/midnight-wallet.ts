@@ -1,6 +1,5 @@
 /**
- * Wallet + indexer connection helpers copied from counter-cli/src/api.ts (same behavior,
- * no Counter contract dependency) so scripts can typecheck without building counter-contract.
+ * Wallet + indexer connection helpers for deploy scripts (midnight-js + unshielded wallet).
  */
 import { type Logger } from "pino";
 import * as Rx from "rxjs";
@@ -28,13 +27,13 @@ import {
   ShieldedEncryptionPublicKey,
 } from "@midnight-ntwrk/wallet-sdk-address-format";
 
-import type { Config } from "../counter-cli/src/config.js";
+import type { Config } from "./midnight-config.js";
 import type {
   MidnightProvider,
   WalletProvider,
 } from "@midnight-ntwrk/midnight-js-types";
 
-// @ts-expect-error: enable WebSocket usage through apollo (same as counter-cli)
+// @ts-expect-error: enable WebSocket usage through apollo client used by indexer provider
 globalThis.WebSocket = WebSocket;
 
 let logger: Logger;

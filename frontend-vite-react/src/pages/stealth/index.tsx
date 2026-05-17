@@ -233,7 +233,7 @@ export function StealthApp() {
               <Shield className="h-8 w-8 text-violet-300" aria-hidden />
             </div>
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-white">Phantom Protocol</h1>
+              <h1 className="text-2xl font-semibold tracking-tight text-white">Veil Protocol</h1>
               <p className="text-sm text-violet-200/75 font-medium">
                 Stealth × x402 — client-side DKSAP + agent-server payment challenge (Midnight Preview)
               </p>

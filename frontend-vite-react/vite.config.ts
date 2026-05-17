@@ -52,6 +52,7 @@ export default defineConfig(({ mode }) => ({
     ],
   },
   build: {
+    target: 'es2022',
     commonjsOptions: {
       transformMixedEsModules: true,
     },

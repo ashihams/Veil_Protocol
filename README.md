@@ -1,8 +1,8 @@
-# Phantom Protocol
+# Veil Protocol
 
 **Private agent-to-agent payments on Midnight Network.**
 
-Phantom Protocol enables AI agents to pay each other using stealth addresses — no observer can see who paid whom, how much, or for what. Built on Midnight's zero-knowledge proof system with real Compact smart contracts deployed to Preview network.
+Veil Protocol enables AI agents to pay each other using stealth addresses — no observer can see who paid whom, how much, or for what. Built on Midnight's zero-knowledge proof system with real Compact smart contracts deployed to Preview network.
 
 > 6 ZK contracts compiled and deployed · Real DKSAP cryptography · x402 HTTP payment flow · Working end-to-end demo
 
@@ -22,26 +22,21 @@ cd agent-server && npm run dev
 cd frontend-vite-react && npm run dev
 ```
 
-Open **http://localhost:5173/stealth** and follow the numbered steps at the bottom of the page.
+Open **http://localhost:5173/** — the stealth × x402 demo is the app home.
 
 **Terminal 3 — Run the headless E2E proof (optional)**
 
 ```bash
-cd stealth-contract && npm run test:e2e
+npm run demo:veil
 ```
+
+Expected output ends with:
 
 ```
 🔑 Step 1: Generated stealth keys for both agents
-📡 Step 2: POST /task → 402 Payment Required
-🎯 Step 3: Derived stealth address: 0xf455b4...d6c186
-📋 Step 4: Announcement created (viewTag: 0xc6)
-🔐 Step 5: Payment authorization built
-✍️  Step 6: HMAC signature computed
-💰 Step 7: POST /task with payment → 200 OK (result: 100)
-🔍 Step 8: Agent B scanned — MATCH FOUND ✅
-⏱️  Total: 87ms
+...
 ═══════════════════════════════════════════════
-🎉 STEALTH x402 PAYMENT — FULLY WORKING
+🎉 Veil Protocol — STEALTH × x402 PAYMENT OK
 ═══════════════════════════════════════════════
 ```
 
@@ -106,7 +101,7 @@ Layer 4 — Privacy
 
 ## Stealth Cryptography (DKSAP)
 
-Phantom Protocol uses the Dual-Key Stealth Address Protocol — the same elliptic curve math used by Umbra on Ethereum, implemented with `@noble/secp256k1`.
+Veil Protocol uses the Dual-Key Stealth Address Protocol — the same elliptic curve math used by Umbra on Ethereum, implemented with `@noble/secp256k1`.
 
 ```
 Receiver publishes:     P_spend = p_spend × G
@@ -158,7 +153,7 @@ The view tag allows receivers to reject non-matching announcements after a singl
 ## Project Structure
 
 ```
-Phantom_Protocol/
+Veil_Protocol/
 ├── agent-contract/        # ERC-8004 registries (Identity, Reputation, Validation)
 │   └── src/
 │       ├── identity.compact
@@ -176,14 +171,12 @@ Phantom_Protocol/
 │       ├── crypto/             # stealth.ts (DKSAP), types.ts, test-stealth.ts
 │       ├── bridge/             # x402-stealth-bridge.ts (connects DKSAP to x402)
 │       ├── services/           # In-memory registry, announcements, verifier
-│       ├── contracts/          # 3 Compact source files
+│       ├── contracts/          # Compact sources
 │       ├── managed/            # Compiled ZK artifacts
 │       └── test-e2e.ts         # Full flow test
-├── frontend-vite-react/   # Demo UI
-│   └── src/pages/stealth/ # Two-panel buyer/seller demo
-├── scripts/               # deploy-all.ts + deployments.json
-├── counter-contract/      # Midnight starter template (reference)
-└── counter-cli/           # Counter deployer (reference)
+├── frontend-vite-react/   # Demo UI (stealth home at /)
+│   └── src/pages/stealth/      # Two-panel buyer/seller demo
+└── scripts/                    # deploy-all.ts, demo-veil.mjs, deployments.json
 ```
 
 ---
@@ -192,7 +185,7 @@ Phantom_Protocol/
 
 ```bash
 # Crypto unit tests (DKSAP lifecycle)
-cd stealth-contract && npm run test:crypto
+cd stealth-contract && npm run test:crypto-lifecycle
 
 # Bridge integration test (requires agent-server running)
 cd stealth-contract && npm run test:bridge
@@ -208,7 +201,7 @@ cd stealth-contract && npm run test:e2e
 ```bash
 git lfs install
 git clone https://github.com/ashihams/Phantom_Protocol.git
-cd Phantom_Protocol
+cd Phantom_Protocol   # or your fork / local folder name
 npm install
 npm run build
 ```
