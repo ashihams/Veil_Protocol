@@ -34,11 +34,17 @@ const X402_SECRET = import.meta.env.VITE_X402_SECRET ?? 'midnight-demo-secret';
 
 const TASK_DEFAULT: TaskRequest = { op: 'add', a: 42, b: 58 };
 
-/** Deployed Midnight contract identifiers (preview) — compact / indexer form */
+/** Preview defaults — override with VITE_* in `.env` / Vercel (see `scripts/deployments.json`). */
 const ONCHAIN_CONTRACTS = {
-  stealthKeyRegistry: '05fdff7371c9f498f2b3a3953606b1c3f6d8dfbddefd0948c25134a52efb6fd4',
-  stealthSend: 'eb2c89ce96c09b5ebe5164d430675991185a8b8ee79df0449df476f485f8528b',
-  announcementLog: 'a10237a50fc0e285601189ca3e8ac163da91e0d98642ff823a6012d1ea0e67bf',
+  stealthKeyRegistry:
+    import.meta.env.VITE_STEALTH_KEY_REGISTRY_ADDRESS ??
+    '05fdff7371c9f498f2b3a3953606b1c3f6d8dfbddefd0948c25134a52efb6fd4',
+  stealthSend:
+    import.meta.env.VITE_STEALTH_SEND_ADDRESS ??
+    'eb2c89ce96c09b5ebe5164d430675991185a8b8ee79df0449df476f485f8528b',
+  announcementLog:
+    import.meta.env.VITE_ANNOUNCEMENT_LOG_ADDRESS ??
+    'a10237a50fc0e285601189ca3e8ac163da91e0d98642ff823a6012d1ea0e67bf',
 } as const;
 
 type FlowStatus = 'idle' | 'payment_required' | 'complete' | 'error';

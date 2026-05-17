@@ -7,6 +7,7 @@ export const logger = pino.pino({
   level: 'trace',
 });
 
+/** Optional `stealth.compact` ledger for join/deploy helpers — not StealthSend (see DEPLOYMENT_PROCEDURE.md). */
 const stealthContractAddress =
   import.meta.env.VITE_STEALTH_CONTRACT_ADDRESS ??
   '0000000000000000000000000000000000000000000000000000000000000000';
