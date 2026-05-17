@@ -8,7 +8,7 @@ Configuration in the repo is defined in **`vercel.json`** (Vercel reads it when 
 |---------------------|--------|--------|
 | `framework` | `vite` | Enables the Vite preset (asset handling, defaults). |
 | `installCommand` | `npm install` | Runs at **repo root** so npm workspaces resolve (`frontend-vite-react`, `stealth-contract`, …). |
-| `buildCommand` | `npm run build-production` | Root `package.json` script: LFS pull → `stealth-contract` build → frontend `copy-contract-keys` + `vite build`. |
+| `buildCommand` | `npm run build-production` | Root `package.json` script: `stealth-contract` build → frontend `copy-contract-keys` + `vite build` (no `git lfs pull`; artifacts must already be real files in the checkout). |
 | `outputDirectory` | `frontend-vite-react/dist` | Vercel serves this folder as the deployment. |
 | `devCommand` | `npm run dev:frontend` | Used when you run `vercel dev` locally (optional). |
 
@@ -17,7 +17,7 @@ Configuration in the repo is defined in **`vercel.json`** (Vercel reads it when 
 Some flows lock the subdirectory at creation. That is fine: the repo includes **`frontend-vite-react/vercel.json`**, which:
 
 - runs **`cd .. && npm install`** so workspace deps (`@eddalabs/stealth-contract`, etc.) resolve from the monorepo root  
-- runs **`cd .. && npm run build-production`** so `git lfs pull`, `stealth-contract` build, and `copy-contract-keys` + Vite all run from the real repo root  
+- runs **`cd .. && npm run build-production`** so `stealth-contract` build and `copy-contract-keys` + Vite run from the real repo root  
 - sets **`outputDirectory`** to **`dist`** (relative to `frontend-vite-react`, i.e. this app’s `dist/`)
 
 In the dashboard, leave **Build and Output Settings** matching that file (or clear overrides so Vercel picks it up). **Framework Preset:** Vite.
@@ -47,15 +47,11 @@ In the dashboard, leave **Build and Output Settings** matching that file (or cle
 2. **Root Directory:** prefer **empty** (repository root) so the root **`vercel.json`** applies. If the project is already tied to **`frontend-vite-react`**, keep it — ensure **`frontend-vite-react/vercel.json`** is picked up (see table above).  
 3. Confirm **Build Command** / **Output Directory** match the active `vercel.json`. Override manually if an old cache shows different values.
 
-### 2. Enable Git LFS (required)
+### 2. Git LFS and ZK files in CI
 
-ZK artifacts are stored with Git LFS:
+`build-production` does **not** run `git lfs pull`. The build expects `stealth-contract/src/managed/**` to already contain **real** prover/verifier/zkir bytes in the working tree after checkout.
 
-1. Project **Settings → Git**  
-2. Turn **Git LFS** **ON**  
-3. Save, then redeploy (**Deployments → … → Redeploy**, disable “Use existing Build Cache” if assets were wrong before)
-
-If LFS is off, builds may succeed but the browser can receive **LFS pointer text** instead of binaries → prover/verifier failures.
+On Vercel, turn **Settings → Git → Git LFS** **ON** if you use LFS so the **clone** materializes binaries (not pointer files). If LFS is unavailable or off, commit those artifacts as **normal Git blobs** or another mechanism so `copy-contract-keys` copies binaries; otherwise the browser may get **pointer text** and proofs fail.
 
 ### 3. Node.js version
 
@@ -123,9 +119,8 @@ After changing env vars, **redeploy** so Vite embeds the new `VITE_*` values at 
 
 ## What `build-production` does (root `package.json`)
 
-1. `git lfs pull` — ensure large managed files are present in the build environment  
-2. `cd stealth-contract && npm run build` — TypeScript build + copy `src/managed` into `stealth-contract/dist` (no `compact` CLI on Vercel required if committed artifacts are up to date)  
-3. `cd frontend-vite-react && npm run build` — **`copy-contract-keys`** copies `stealth-contract/src/managed/stealth/{keys,zkir}` → `public/midnight/stealth/`, then **Vite** emits `frontend-vite-react/dist`  
+1. `cd stealth-contract && npm run build` — TypeScript build + copy `src/managed` into `stealth-contract/dist` (no `compact` CLI in CI required if committed artifacts are up to date)  
+2. `cd frontend-vite-react && npm run build` — **`copy-contract-keys`** copies `stealth-contract/src/managed/stealth/{keys,zkir}` → `public/midnight/stealth/`, then **Vite** emits `frontend-vite-react/dist`  
 
 ---
 
@@ -156,7 +151,7 @@ After changing env vars, **redeploy** so Vite embeds the new `VITE_*` values at 
 
 **First production deploy**
 
-- [ ] Git LFS enabled on the Vercel project  
+- [ ] **ZK artifacts** are real files in the build tree after checkout (e.g. Vercel **Git LFS** on so clone smudges LFS objects, or artifacts stored as normal Git files)  
 - [ ] Root directory either **repo root** (root `vercel.json`) or **`frontend-vite-react`** with matching `frontend-vite-react/vercel.json` / dashboard commands  
 - [ ] `VITE_STEALTH_KEY_REGISTRY_ADDRESS`, `VITE_STEALTH_SEND_ADDRESS`, and `VITE_ANNOUNCEMENT_LOG_ADDRESS` set (match `scripts/deployments.json`)  
 - [ ] **`VITE_STEALTH_CONTRACT_ADDRESS` not set** on Vercel (correct default)  
