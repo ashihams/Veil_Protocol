@@ -1,8 +1,8 @@
 /**
  * Bridges Compact DKSAP stealth (crypto/) with agent-server x402 (midnight-hmac).
  *
- * HMAC + PaymentProofPayload must match `agent-server/src/payment-service.ts`, which uses
- * `@eddalabs/stealth-contract` `generatePaymentProof` / `generatePaymentProofPayloadBytes` (src/stealth.ts).
+ * HMAC + PaymentProofPayload must match `agent-server/src/stealth-types.ts`
+ * (inlined from `stealth-contract` `generatePaymentProof` / `generatePaymentProofPayloadBytes`).
  *
  * Browser-safe: no `node:crypto` / Node `Buffer` (uses Web Crypto + optional Buffer polyfill).
  */
